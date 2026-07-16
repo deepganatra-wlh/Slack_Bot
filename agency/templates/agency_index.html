@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Agency Grid Processor</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#07090f;--s1:#0d1017;--s2:#131822;--s3:#1a2030;
+  --b1:#1e2640;--b2:#28324e;--b3:#333e58;
+  --ac:#f59e0b;--ac2:#ef4444;--ac3:#10b981;--ac4:#6366f1;
+  --tx:#e8ecf7;--t2:#8898bb;--t3:#4a5a7a;
+  --fn:'Outfit',sans-serif;--mo:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--tx);font-family:var(--fn);font-size:14px;}
+.app{display:grid;grid-template-columns:228px 1fr;min-height:100vh;}
+.sidebar{background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.logo{padding:20px 16px 16px;border-bottom:1px solid var(--b1);}
+.logo-badge{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--ac),#f97316);display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:9px;}
+.logo h1{font-size:13.5px;font-weight:700;}
+.logo p{font-size:10px;color:var(--t3);font-family:var(--mo);margin-top:1px;}
+.nav{padding:10px 7px;flex:1;}
+.nl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);padding:8px 9px 3px;font-family:var(--mo);}
+.ni{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:7px;cursor:pointer;font-size:12.5px;color:var(--t2);transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:var(--fn);}
+.ni:hover{background:var(--s3);color:var(--tx);}
+.ni.active{background:rgba(245,158,11,.1);color:var(--ac);}
+.nb{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--b3);display:flex;align-items:center;justify-content:center;font-size:9.5px;font-family:var(--mo);flex-shrink:0;}
+.ni.active .nb{border-color:var(--ac);color:var(--ac);background:rgba(245,158,11,.1);}
+.ni.done .nb{background:var(--ac3);border-color:var(--ac3);color:#07090f;}
+.sf{padding:10px 13px 18px;border-top:1px solid var(--b1);margin-top:auto;}
+
+.main{overflow-x:hidden;}
+.topbar{background:var(--s2);border-bottom:1px solid var(--b1);padding:10px 18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.mode-btn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--b2);background:transparent;color:var(--t2);transition:all .15s;font-family:var(--fn);}
+.mode-btn.ms{background:rgba(239,68,68,.1);border-color:var(--ac2);color:var(--ac2);}
+.mode-btn.mn{background:rgba(99,102,241,.1);border-color:var(--ac4);color:var(--ac4);}
+.mode-tag{font-size:11px;font-family:var(--mo);padding:3px 9px;border-radius:4px;}
+.mt-s{background:rgba(239,68,68,.1);color:var(--ac2);}
+.mt-n{background:rgba(99,102,241,.1);color:var(--ac4);}
+
+.panel{display:none;padding:26px 30px;max-width:1100px;}
+.panel.active{display:block;}
+.ph{margin-bottom:22px;}
+.ph h2{font-size:21px;font-weight:700;}
+.ph p{color:var(--t2);margin-top:5px;line-height:1.5;font-size:13px;}
+
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:13px;padding:18px;margin-bottom:14px;}
+.ct{font-size:13px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.bx{padding:2px 7px;border-radius:3px;font-size:9px;font-family:var(--mo);}
+.bx-am{background:rgba(245,158,11,.15);color:var(--ac);}
+.bx-gr{background:rgba(16,185,129,.12);color:var(--ac3);}
+.bx-re{background:rgba(239,68,68,.12);color:var(--ac2);}
+.bx-pu{background:rgba(99,102,241,.1);color:var(--ac4);}
+
+.uz{border:2px dashed var(--b3);border-radius:11px;padding:30px 18px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.uz:hover,.uz.drag{border-color:var(--ac);background:rgba(245,158,11,.03);}
+.uz.has-file{border-color:var(--ac3);background:rgba(16,185,129,.03);}
+.uz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;}
+.ui{font-size:26px;margin-bottom:7px;}
+.uz h3{font-size:13.5px;font-weight:600;margin-bottom:3px;}
+.uz p{color:var(--t2);font-size:11.5px;}
+.fc{display:inline-flex;align-items:center;gap:6px;background:var(--s3);border:1px solid var(--b2);padding:5px 10px;border-radius:6px;font-family:var(--mo);font-size:10.5px;margin-top:8px;}
+
+.fg{margin-bottom:11px;}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;}
+.fr4{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;}
+label{display:block;font-size:10.5px;font-family:var(--mo);color:var(--t2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;}
+input[type=text],input[type=number],select,textarea{width:100%;background:var(--s3);border:1px solid var(--b2);border-radius:7px;padding:8px 11px;color:var(--tx);font-family:var(--fn);font-size:13px;outline:none;transition:border .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--ac);}
+textarea{resize:vertical;min-height:80px;font-family:var(--mo);font-size:11px;line-height:1.6;}
+select option{background:var(--s2);}
+input[type=checkbox]{width:15px;height:15px;accent-color:var(--ac);cursor:pointer;margin-top:2px;}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;font-size:12.5px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:var(--fn);}
+.btn-am{background:var(--ac);color:#07090f;font-weight:700;}
+.btn-am:hover{background:#d97706;}
+.btn-am:disabled{background:var(--b2);color:var(--t3);cursor:not-allowed;}
+.btn-sec{background:var(--s3);border:1px solid var(--b2);color:var(--tx);}
+.btn-sec:hover{border-color:var(--ac);color:var(--ac);}
+.btn-gr{background:var(--ac3);color:#07090f;font-weight:700;}
+.btn-re{background:rgba(239,68,68,.12);border:1px solid var(--ac2);color:var(--ac2);}
+.btn-lg{padding:10px 22px;font-size:13.5px;}
+.btn-sm{padding:4px 11px;font-size:11px;}
+.btn-xs{padding:3px 7px;font-size:10px;border-radius:4px;}
+.ar{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+
+.sb{display:flex;align-items:flex-start;gap:9px;padding:11px 14px;border-radius:8px;font-size:12.5px;margin-bottom:12px;}
+.sb-info{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);color:var(--ac);}
+.sb-ok{background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);color:var(--ac3);}
+.sb-err{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);color:var(--ac2);white-space:pre-wrap;font-family:var(--mo);font-size:11px;}
+.sp{width:13px;height:13px;border:2px solid rgba(245,158,11,.25);border-top-color:var(--ac);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;margin-top:1px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.tw{overflow-x:auto;border-radius:8px;border:1px solid var(--b1);}
+table{width:100%;border-collapse:collapse;font-size:11px;font-family:var(--mo);}
+thead{background:var(--s3);}
+th{padding:7px 10px;text-align:left;color:var(--t2);font-weight:500;border-bottom:1px solid var(--b1);white-space:nowrap;}
+td{padding:6px 10px;border-bottom:1px solid var(--b1);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.stat{background:var(--s2);border:1px solid var(--b1);border-radius:11px;padding:13px 15px;}
+.stat .val{font-size:22px;font-weight:700;}
+.stat .lbl{font-size:9px;color:var(--t3);font-family:var(--mo);margin-top:3px;text-transform:uppercase;letter-spacing:.05em;}
+
+.divider{border:none;border-top:1px solid var(--b1);margin:16px 0;}
+.hint{font-size:10.5px;color:var(--t3);margin-top:3px;font-family:var(--mo);line-height:1.5;}
+
+/* Column config table */
+.cct{width:100%;border-collapse:collapse;}
+.cct th{background:var(--s3);padding:7px 9px;text-align:left;font-weight:500;color:var(--t2);font-family:var(--mo);font-size:9.5px;text-transform:uppercase;border-bottom:1px solid var(--b1);white-space:nowrap;}
+.cct td{padding:5px 8px;border-bottom:1px solid var(--b1);vertical-align:top;}
+.cct tr.matched td:first-child{border-left:2px solid var(--ac3);}
+.cct tr.unmatched td:first-child{border-left:2px solid var(--ac);}
+.cct input,.cct select,.cct textarea{background:var(--bg);border:1px solid var(--b2);border-radius:4px;padding:4px 7px;font-size:11px;color:var(--tx);width:100%;font-family:var(--fn);}
+.cct input:focus,.cct select:focus,.cct textarea:focus{border-color:var(--ac);}
+.cct textarea{min-height:46px;font-family:var(--mo);font-size:10px;resize:vertical;}
+
+.vg-row{display:grid;grid-template-columns:1fr 1fr 1fr 30px;gap:8px;align-items:end;margin-bottom:8px;}
+.chip{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;font-family:var(--mo);margin:1px;}
+.chip-am{background:rgba(245,158,11,.12);color:var(--ac);}
+.chip-re{background:rgba(239,68,68,.1);color:var(--ac2);}
+.chip-gr{background:rgba(16,185,129,.1);color:var(--ac3);}
+
+
+/* ── Merger column sequencer ── */
+.col-seq-grid{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;min-height:44px;}
+.col-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:6px;
+  background:var(--s3);border:1px solid var(--b2);font-family:var(--mo);font-size:10.5px;
+  color:var(--tx);cursor:grab;user-select:none;transition:border-color .15s,background .15s;}
+.col-pill:hover{border-color:var(--ac);background:var(--bg);}
+.col-pill.dragging{opacity:.35;cursor:grabbing;}
+.col-pill.drag-over{border-color:var(--ac);background:rgba(245,158,11,.12);}
+.col-pill .drag-handle{color:var(--t3);font-size:11px;}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--s1)}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+.fade{animation:fadeIn .22s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:800px){.app{grid-template-columns:1fr}.sidebar{display:none}.panel{padding:14px}.stats-row,.fr3,.fr4{grid-template-columns:1fr 1fr}.fr{grid-template-columns:1fr}}
+
+/* ── AI Assistant ── */
+.ai-fab{position:fixed;right:24px;bottom:24px;width:54px;height:54px;border-radius:50%;
+  background:linear-gradient(135deg,var(--ac),#f97316);border:none;cursor:pointer;z-index:500;
+  display:flex;align-items:center;justify-content:center;font-size:23px;box-shadow:0 6px 22px rgba(245,158,11,.4);
+  transition:transform .15s;}
+.ai-fab:hover{transform:scale(1.06);}
+.ai-fab .ai-dot{position:absolute;top:2px;right:2px;width:11px;height:11px;border-radius:50%;background:var(--ac3);border:2px solid var(--bg);}
+.ai-panel{position:fixed;right:24px;bottom:90px;width:380px;max-height:min(620px,75vh);background:var(--s1);
+  border:1px solid var(--b1);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);z-index:499;
+  display:none;flex-direction:column;overflow:hidden;}
+.ai-panel.open{display:flex;}
+.ai-head{padding:14px 16px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:10px;background:var(--s2);}
+.ai-head .ai-avatar{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--ac),#f97316);
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.ai-head-txt{flex:1;min-width:0;}
+.ai-head-txt h4{font-size:13px;font-weight:700;}
+.ai-head-txt p{font-size:10px;color:var(--t3);font-family:var(--mo);margin-top:1px;}
+.ai-close{background:none;border:none;color:var(--t2);font-size:16px;cursor:pointer;padding:4px;line-height:1;}
+.ai-close:hover{color:var(--tx);}
+.ai-ctx-pill{margin:0 16px;padding:6px 10px;border-radius:7px;background:rgba(245,158,11,.08);
+  border:1px solid rgba(245,158,11,.2);font-size:10.5px;color:var(--t2);font-family:var(--mo);
+  display:flex;align-items:center;gap:6px;margin-top:12px;}
+.ai-ctx-pill .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.ai-ctx-pill.ok .dot{background:var(--ac3);}
+.ai-ctx-pill.warn .dot{background:var(--ac);}
+.ai-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;}
+.ai-msg{max-width:88%;font-size:12.5px;line-height:1.55;padding:9px 12px;border-radius:12px;white-space:pre-wrap;}
+.ai-msg.user{align-self:flex-end;background:var(--ac);color:#07090f;border-bottom-right-radius:3px;}
+.ai-msg.bot{align-self:flex-start;background:var(--s3);color:var(--tx);border:1px solid var(--b2);border-bottom-left-radius:3px;}
+.ai-msg.err{align-self:flex-start;background:rgba(239,68,68,.1);color:var(--ac2);border:1px solid rgba(239,68,68,.3);}
+.ai-actions{align-self:flex-start;display:flex;flex-direction:column;gap:4px;max-width:88%;}
+.ai-action-chip{font-size:10.5px;font-family:var(--mo);padding:5px 9px;border-radius:6px;
+  background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--ac3);}
+.ai-nav-btn{align-self:flex-start;font-size:11px;padding:6px 12px;border-radius:7px;background:rgba(245,158,11,.12);
+  border:1px solid var(--ac);color:var(--ac);cursor:pointer;font-family:var(--fn);}
+.ai-suggest{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 12px;}
+.ai-suggest-chip{font-size:10.5px;padding:5px 10px;border-radius:20px;background:var(--s3);border:1px solid var(--b2);
+  color:var(--t2);cursor:pointer;font-family:var(--fn);}
+.ai-suggest-chip:hover{border-color:var(--ac);color:var(--ac);}
+.ai-typing{align-self:flex-start;display:flex;gap:4px;padding:10px 12px;background:var(--s3);border-radius:12px;border:1px solid var(--b2);}
+.ai-typing span{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:ai-bounce 1.2s infinite ease-in-out;}
+.ai-typing span:nth-child(2){animation-delay:.15s;} .ai-typing span:nth-child(3){animation-delay:.3s;}
+@keyframes ai-bounce{0%,60%,100%{transform:translateY(0);opacity:.5;}30%{transform:translateY(-4px);opacity:1;}}
+.ai-input-row{border-top:1px solid var(--b1);padding:10px 12px;display:flex;gap:8px;align-items:flex-end;background:var(--s2);}
+.ai-input-row textarea{flex:1;min-height:36px;max-height:110px;resize:none;font-size:12.5px;padding:8px 11px;}
+.ai-send{width:36px;height:36px;border-radius:9px;background:var(--ac);border:none;color:#07090f;cursor:pointer;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.ai-send:disabled{background:var(--b2);color:var(--t3);cursor:not-allowed;}
+@media(max-width:480px){
+  .ai-panel{right:10px;left:10px;width:auto;bottom:80px;}
+  .ai-fab{right:16px;bottom:16px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-badge">⚡</div>
+    <h1>Agency Grid</h1>
+    <p>Special Motor Matrix Portal</p>
+  </div>
+  <nav class="nav">
+    <div class="nl">Workflow</div>
+    <button class="ni" id="ni-1" onclick="goStep(1)"><span class="nb" id="nb-1">1</span>Upload Files</button>
+    <button class="ni" id="ni-2" onclick="goStep(2)"><span class="nb" id="nb-2">2</span>Sheet &amp; Mode</button>
+    <button class="ni" id="ni-3" onclick="goStep(3)"><span class="nb" id="nb-3">3</span>Column Config</button>
+    <button class="ni" id="ni-4" onclick="goStep(4)"><span class="nb" id="nb-4">4</span>GWP &amp; Agent Map</button>
+    <button class="ni" id="ni-5" onclick="goStep(5)"><span class="nb" id="nb-5">5</span>RTO Config</button>
+    <button class="ni" id="ni-6" onclick="goStep(6)"><span class="nb" id="nb-6">6</span>Output Settings</button>
+    <button class="ni" id="ni-7" onclick="goStep(7)"><span class="nb" id="nb-7">7</span>Process &amp; Export</button>
+    <div class="nl" style="margin-top:10px">Tools</div>
+    <button class="ni" id="ni-8" onclick="goStep(8)"><span class="nb" id="nb-8">⇌</span>CSV Merger</button>
+  </nav>
+  <div class="sf">
+    <div style="font-size:9.5px;color:var(--t3);font-family:var(--mo);margin-bottom:7px">CONFIG PRESETS</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+      <button class="btn btn-sec btn-sm" onclick="exportConfig()" style="width:100%;justify-content:center;gap:6px">
+        <span>⬇</span> Export Config
+      </button>
+      <label class="btn btn-sec btn-sm" style="width:100%;justify-content:center;gap:6px;cursor:pointer;margin:0">
+        <span>⬆</span> Import Config
+        <input type="file" id="cfg-import-input" accept=".json" style="display:none" onchange="importConfig(this)"/>
+      </label>
+    </div>
+    <div id="cfg-import-status" style="font-size:10px;font-family:var(--mo);margin-bottom:10px;display:none"></div>
+    <div style="font-size:9.5px;color:var(--t3);font-family:var(--mo);margin-bottom:7px">MODE LOGIC</div>
+    <div style="font-size:11px;color:var(--t2);line-height:1.8;">
+      <span class="chip chip-re">Special</span> Block/IRDA/MISP/SYS → IRDA outgo<br/>
+      <span class="chip chip-am" style="background:rgba(99,102,241,.1);color:var(--ac4)">Normal</span> Block/IRDA etc → skip <b>that cell</b>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+<div class="topbar">
+  <button class="mode-btn ms" id="mode-special" onclick="setMode('special')">⚡ Special Mode</button>
+  <button class="mode-btn" id="mode-normal" onclick="setMode('normal')">📋 Normal Mode</button>
+  <span id="mode-tag" class="mode-tag mt-s">Special: IRDA/Block → set IRDA outgo</span>
+</div>
+
+<!-- ── Step 1: Upload ── -->
+<div class="panel active" id="p-1">
+  <div class="ph"><h2>Upload Files</h2><p>Upload the Special Motor Matrix Excel and optionally the RTO vs Cluster mapping file.</p></div>
+  <div class="card">
+    <div class="ct">Matrix Grid File <span class="bx bx-am">Required</span></div>
+    <div class="uz" id="uz-main" ondragover="doDrag(event,'main')" ondragleave="doDragLeave('main')" ondrop="doDrop(event,'main')">
+      <input type="file" id="fi-main" accept=".xlsx,.xlsb,.xls" onchange="handleFile('main')"/>
+      <div class="ui">📊</div>
+      <h3>Drop the Special Motor Matrix Excel</h3>
+      <p>.xlsx · up to 200 MB</p>
+      <div id="fd-main"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">RTO vs Cluster File <span class="bx bx-gr">Optional — only needed if RTO sheet is in a separate file</span></div>
+    <div class="sb sb-info" style="margin-bottom:10px">
+      💡 <strong>If your RTO sheet is inside the same workbook</strong> (e.g. "RTO Vs Cluster (New)"), skip this upload entirely — the portal will find it automatically. Only upload here if your RTO data is in a <em>separate</em> Excel file.
+    </div>
+    <div class="uz" id="uz-rto" ondragover="doDrag(event,'rto')" ondragleave="doDragLeave('rto')" ondrop="doDrop(event,'rto')">
+      <input type="file" id="fi-rto" accept=".xlsx,.xls" onchange="handleFile('rto')"/>
+      <div class="ui">🗺️</div>
+      <h3>RTO vs Cluster Excel <span style="font-weight:400;color:var(--t2)">(separate file only)</span></h3>
+      <p>Must contain: RTO CODE · PRODUCT CATEGORY · UW CLUSTER (26-27)</p>
+      <div id="fd-rto"></div>
+    </div>
+  </div>
+  <button class="btn btn-am btn-lg" id="btn-upload" onclick="doUpload()" disabled>Upload &amp; Continue →</button>
+</div>
+
+<!-- ── Step 2: Sheet & Mode ── -->
+<div class="panel" id="p-2">
+  <div class="ph"><h2>Sheet &amp; Mode Configuration</h2><p>Choose sheet, configure header row positions, and set value logic for Normal vs Special mode.</p></div>
+  <div class="card">
+    <div class="ct">Sheet &amp; Header Configuration</div>
+    <div class="fr3">
+      <div class="fg"><label>Data Sheet</label><select id="cfg-sheet"></select></div>
+      <div class="fg"><label>Header Row 1 — BIZ MIX group (e.g. 2)</label><input type="number" id="cfg-hr1" value="2" min="1"/></div>
+      <div class="fg"><label>Header Row 2 — Sub-category (e.g. 3)</label><input type="number" id="cfg-hr2" value="3" min="1"/></div>
+    </div>
+    <div class="fr3">
+      <div class="fg"><label>Header Row 3 — Data label row (e.g. 4)</label><input type="number" id="cfg-hr3" value="4" min="1"/></div>
+      <div class="fg"><label>Data Start Row (e.g. 5)</label><input type="number" id="cfg-dsr" value="5" min="1"/></div>
+      <div class="fg"><label>Rate Columns Start At Column #</label><input type="number" id="cfg-sc" value="13" min="1"/></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Meta Column Positions <span class="bx bx-pu">1-indexed · set to 0 if column absent</span></div>
+    <div style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:10px 13px;margin-bottom:12px;font-size:11.5px;color:var(--ac4);">
+      <b>Std Grid sheets</b> (Agency-Comp-Expt, SATP etc.) have <b>no IMD Code / Name columns</b> — set those to <b>0</b>. The portal will then use UW Cluster and Vol Lower as the row identity instead. Rate columns on these sheets typically start at <b>col 4</b>.
+    </div>
+    <div class="fr4">
+      <div class="fg"><label>IMD Code</label><input type="number" id="mc-imd-code" value="1" min="1"/></div>
+      <div class="fg"><label>IMD Name</label><input type="number" id="mc-imd-name" value="2" min="1"/></div>
+      <div class="fg"><label>Relationship Code</label><input type="number" id="mc-rel" value="3" min="1"/></div>
+      <div class="fg"><label>IMD Type</label><input type="number" id="mc-imd-type" value="4" min="1"/></div>
+    </div>
+    <div class="fr4">
+      <div class="fg"><label>Vol Lower (Biz Vol)</label><input type="number" id="mc-vol-ll" value="5" min="1"/></div>
+      <div class="fg"><label>Vol Upper</label><input type="number" id="mc-vol-ul" value="6" min="1"/></div>
+      <div class="fg"><label>Vol Consideration</label><input type="number" id="mc-vol-rem" value="7" min="1"/></div>
+      <div class="fg"><label>UW Cluster / Outgo On</label><input type="number" id="mc-cluster" value="12" min="1"/></div>
+    </div>
+
+    <!-- ── Extra Meta Columns (optional, month-specific) ── -->
+    <div style="margin-top:14px;border-top:1px solid rgba(99,102,241,.15);padding-top:12px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <b style="font-size:12.5px;color:var(--tx)">Extra Meta Columns</b>
+        <span class="bx bx-pu" style="font-size:11px;">Optional columns that appear some months (e.g. Detariff Discount LL/UL). Values are passed through to every output row.</span>
+        <button class="btn btn-sec" onclick="addExtraMetaRow()" style="margin-left:auto;padding:3px 10px;font-size:11.5px;">+ Add Column</button>
+      </div>
+      <div id="extra-meta-rows" style="display:flex;flex-direction:column;gap:6px;"></div>
+      <p class="hint" style="margin-top:4px;">Each extra column's value is written to the output row under the label you set. Set col to 0 to disable a row.</p>
+    </div>
+
+    <button class="btn btn-sec" onclick="doInspect()" style="margin-top:4px">🔍 Inspect Sheet Structure</button>
+  </div>
+  <div id="inspect-result"></div>
+  <div class="card">
+    <div class="ct">Value Logic Configuration</div>
+    <div class="fr">
+      <div>
+        <div class="fg">
+          <label>Values to ignore / trigger IRDA (one per line)</label>
+          <textarea id="ignore-vals" rows="5">Block
+NA
+IRDA
+MISP
+SYSTEM COMMISSION</textarea>
+          <div class="hint">Normal mode: these skip <b>that cell/column only</b> — the row continues for other columns. Special mode: these trigger IRDA outgo instead of skipping.</div>
+        </div>
+      </div>
+      <div>
+        <div class="fr">
+          <div class="fg"><label>IRDA Outgo Value</label><input type="text" id="irda-outgo" value="IRDA"/></div>
+          <div class="fg"><label>IRDA Prct Value</label><input type="text" id="irda-prct" value="-0.1"/></div>
+        </div>
+        <div class="fg"><label>Normal / GWP Outgo Value</label><input type="text" id="norm-outgo" value="GWP"/></div>
+        <div class="fg">
+          <label>Skip row if Vol Lower equals (header bleed guard)</label>
+          <input type="text" id="skip-vol-biz" value="Agency" placeholder="comma-separated values"/>
+          <div class="hint">Rows where Biz Vol column equals these values are skipped entirely.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ar">
+    <button class="btn btn-sec" onclick="goStep(1)">← Back</button>
+    <button class="btn btn-am btn-lg" id="btn-to-3" onclick="goStep(3)" disabled>Continue to Column Config →</button>
+  </div>
+</div>
+
+<!-- ── Step 3: Column Config ── -->
+<div class="panel" id="p-3">
+  <div class="ph">
+    <h2>Column Configuration</h2>
+    <p>Each rate column from the sheet is listed below with its auto-detected Biz Mix Output, RTO Category, and extra output fields. <span class="chip chip-gr">●</span> = auto-matched · <span class="chip chip-am">●</span> = manual needed.</p>
+  </div>
+  <div class="card">
+    <div class="ct">Rate Columns
+      <span class="bx bx-am" id="col-count-badge"></span>
+      <span class="bx bx-gr" id="col-match-badge"></span>
+      <button class="btn btn-sec btn-sm" onclick="addColRow()">+ Add Row</button>
+    </div>
+    <div style="overflow-x:auto;max-height:600px;overflow-y:auto;">
+    <table class="cct" id="col-cfg-table">
+      <thead><tr>
+        <th>#</th>
+        <th>Sheet Column</th>
+        <th style="min-width:130px">Biz Mix Output</th>
+        <th style="min-width:120px">RTO Category</th>
+        <th style="min-width:200px">Extra Output Fields (Key=Value, one per line)</th>
+        <th>Enable</th>
+      </tr></thead>
+      <tbody id="col-cfg-body"></tbody>
+    </table>
+    </div>
+    <p class="hint" style="margin-top:8px">Extra fields examples: <code>Fuel Type*=Diesel</code> · <code>Vehicle Age Ul*=5</code> · <code>Gross Vehicle Weight Ll*=12000.001</code></p>
+  </div>
+  <div class="ar">
+    <button class="btn btn-sec" onclick="goStep(2)">← Back</button>
+    <button class="btn btn-am btn-lg" onclick="goStep(4)">Continue →</button>
+  </div>
+</div>
+
+<!-- ── Step 4: GWP & Agent Map ── -->
+<div class="panel" id="p-4">
+  <div class="ph"><h2>GWP Columns &amp; Agent Group Map</h2>
+    <p>Map each unique Volume Consideration value to its GWP LL/UL output columns. Configure how IMD Types map to Agent Group Codes.</p>
+  </div>
+  <div class="card">
+    <div class="ct">Volume Consideration → GWP Column Mapping
+      <button class="btn btn-sec btn-sm" onclick="addVgRow()">+ Add</button>
+    </div>
+    <div id="vol-detected-hint" class="hint" style="margin-bottom:10px"></div>
+    <div id="vg-rows"></div>
+    <hr class="divider"/>
+    <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:var(--t2)">Default / Fallback GWP Columns</div>
+    <div class="sb sb-info" style="font-size:11.5px;margin-bottom:12px;">
+      💡 These are used when a row's <strong>Vol Consideration</strong> is <code>std-grid</code> (or has no match above).
+      The <strong>Per-IMD-Type map</strong> below takes priority — if an IMD Type is listed there, its columns are used.
+      Otherwise the legacy fallbacks (Prime / Agency / Key Broking) apply.
+    </div>
+    <div class="fr3">
+      <div class="fg"><label>Default GWP LL Col <span style="color:var(--t3)">(non-std-grid rows)</span></label><input type="text" id="std-ll" value="Total Gwp Ll*"/></div>
+      <div class="fg"><label>Default GWP UL Col <span style="color:var(--t3)">(non-std-grid rows)</span></label><input type="text" id="std-ul" value="Total Gwp Ul*"/></div>
+      <div></div>
+    </div>
+    <div class="fr3">
+      <div class="fg"><label>Prime Broking GWP LL <span style="color:var(--t3)">(std-grid fallback)</span></label><input type="text" id="prime-ll" value="Total Gwp Ll*"/></div>
+      <div class="fg"><label>Prime Broking GWP UL <span style="color:var(--t3)">(std-grid fallback)</span></label><input type="text" id="prime-ul" value="Total Gwp Ul*"/></div>
+      <div></div>
+    </div>
+    <div class="fr3">
+      <div class="fg"><label>Agency GWP LL <span style="color:var(--t3)">(std-grid fallback)</span></label><input type="text" id="agency-ll" value="Totalgwp Keybrok Agency Ll*"/></div>
+      <div class="fg"><label>Agency GWP UL <span style="color:var(--t3)">(std-grid fallback)</span></label><input type="text" id="agency-ul" value="Totalgwp Keybrok Agency Ul*"/></div>
+      <div></div>
+    </div>
+    <div class="fr3">
+      <div class="fg"><label>Key Broking GWP LL <span style="color:var(--t3)">(std-grid fallback)</span></label><input type="text" id="keybrok-ll" value="Totalgwp Keybrok Agency Ll*"/></div>
+      <div class="fg"><label>Key Broking GWP UL <span style="color:var(--t3)">(std-grid fallback)</span></label><input type="text" id="keybrok-ul" value="Totalgwp Keybrok Agency Ul*"/></div>
+      <div></div>
+    </div>
+    <div class="hint" style="margin-bottom:14px">Legacy fallback order for <code>std-grid</code>: per-IMD-type map (below) → Prime keyword → Key Broking keyword → Agency.</div>
+
+    <!-- Per-IMD-Type GWP Map -->
+    <div style="border-top:1px solid var(--b2);padding-top:13px;margin-top:4px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <b style="font-size:12.5px;color:var(--tx)">Per-IMD-Type GWP Column Override</b>
+        <span class="bx bx-pu">for std-grid rows — takes priority over legacy fallbacks above</span>
+        <button class="btn btn-sec btn-sm" onclick="addImdGwpRow()" style="margin-left:auto">+ Add IMD Type</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1.2fr 1.6fr 1.6fr 30px;gap:8px;margin-bottom:5px;padding:0 2px;">
+        <div style="font-size:9.5px;font-family:var(--mo);color:var(--t3);text-transform:uppercase;letter-spacing:.05em">IMD Type (exact)</div>
+        <div style="font-size:9.5px;font-family:var(--mo);color:var(--t3);text-transform:uppercase;letter-spacing:.05em">GWP LL Output Column</div>
+        <div style="font-size:9.5px;font-family:var(--mo);color:var(--t3);text-transform:uppercase;letter-spacing:.05em">GWP UL Output Column</div>
+        <div></div>
+      </div>
+      <div id="imd-gwp-rows"></div>
+      <p class="hint" style="margin-top:5px">Detected IMD Types auto-populate this table. Each entry maps one IMD Type to its specific GWP column pair for <code>std-grid</code> rows.</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">IMD Type → Agent Group Code Map
+      <button class="btn btn-sec btn-sm" onclick="addAgentRow()">+ Add</button>
+    </div>
+    <div id="agent-rows"></div>
+    <div class="hint" style="margin-top:6px">Detected IMD Types: <span id="imd-detected" style="color:var(--ac)">—</span></div>
+  </div>
+  <div class="ar">
+    <button class="btn btn-sec" onclick="goStep(3)">← Back</button>
+    <button class="btn btn-am btn-lg" onclick="goStep(5)">Continue →</button>
+  </div>
+</div>
+
+<!-- ── Step 5: RTO Config ── -->
+<div class="panel" id="p-5">
+  <div class="ph"><h2>RTO Configuration</h2><p>Configure RTO file structure and category normalization for accurate lookups.</p></div>
+  <div class="card">
+    <div class="ct">RTO File Structure</div>
+    <div class="fr3">
+      <div class="fg"><label>RTO Sheet Name</label><input type="text" id="rto-sheet" value="RTO Vs Cluster (New)"/></div>
+      <div class="fg"><label>Header Row</label><input type="number" id="rto-hr" value="2" min="1"/></div>
+      <div></div>
+    </div>
+    <div class="fr3">
+      <div class="fg"><label>RTO Code Column Header</label><input type="text" id="rto-col" value="RTO CODE"/></div>
+      <div class="fg"><label>Cluster Column Header</label><input type="text" id="rto-clu-col" value="UW CLUSTER (26-27)"/></div>
+      <div class="fg"></div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;padding:11px 14px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);border-radius:8px;">
+      <input type="checkbox" id="rto-use-cat" checked onchange="toggleRtoCatCol()" style="margin-top:3px;flex-shrink:0"/>
+      <div>
+        <label for="rto-use-cat" style="font-size:12.5px;font-weight:600;color:var(--tx);text-transform:none;letter-spacing:0;cursor:pointer;display:inline">
+          Use Category Column for RTO lookup
+        </label>
+        <div class="hint" style="margin-top:3px">
+          When enabled, RTO codes are filtered by both Cluster <em>and</em> Product Category. When disabled, all RTO codes for the matching Cluster are returned (Category column is ignored entirely).
+        </div>
+      </div>
+    </div>
+    <div id="rto-cat-col-wrap" class="fr3" style="margin-top:-4px">
+      <div class="fg"><label>Category Column Header</label><input type="text" id="rto-cat-col" value="PRODUCT CATEGORY"/></div>
+      <div class="fg"></div>
+      <div class="fg"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Category Normalization <span class="bx bx-pu">source category → look up as</span>
+      <button class="btn btn-sec btn-sm" onclick="addNormRow()">+ Add</button>
+    </div>
+    <div id="norm-rows"></div>
+    <div class="hint">When RTO lookup for the original category returns nothing, it retries with the normalized name. If still nothing, falls back to ALL RTO codes.</div>
+  </div>
+  <div class="card">
+    <div class="ct">Output Column Names <span class="bx bx-am">customise to match your target schema</span></div>
+    <div class="fr3">
+      <div class="fg"><label>Span Outgo Column</label><input type="text" id="out-span-outgo" value="Span Outgo*"/></div>
+      <div class="fg"><label>Span Prct Column</label><input type="text" id="out-span-prct" value="Span Prct*"/></div>
+      <div class="fg"><label>RTO Code Column</label><input type="text" id="out-rto-code" value="Rto Code*"/></div>
+    </div>
+    <div class="fr3">
+      <div class="fg"><label>RTO Cluster Column</label><input type="text" id="out-rto-clu" value="Rto Cluster*"/></div>
+      <div class="fg"><label>Parent Agent Code</label><input type="text" id="out-parent" value="Parent Agent Code*"/></div>
+      <div class="fg"><label>Primary Agent Code</label><input type="text" id="out-primary" value="Primary Agent Code*"/></div>
+    </div>
+    <div class="fr3">
+      <div class="fg"><label>Agent Group Code</label><input type="text" id="out-ag-grp" value="Agent Group Code*"/></div>
+      <div class="fg"><label>Biz Mix Column</label><input type="text" id="out-biz-mix" value="Biz Mix*"/></div>
+    </div>
+  </div>
+  <div class="ar">
+    <button class="btn btn-sec" onclick="goStep(4)">← Back</button>
+    <button class="btn btn-am btn-lg" onclick="goStep(6)">Continue →</button>
+  </div>
+</div>
+
+<!-- ── Step 6: Output Settings ── -->
+<div class="panel" id="p-6">
+  <div class="ph"><h2>Output Settings</h2><p>Set static fields, column transforms, output column order, and file name.</p></div>
+  <div class="card">
+    <div class="ct">Static Output Fields <span class="bx bx-am">written to every row</span>
+      <button class="btn btn-sec btn-sm" onclick="addStaticField()">+ Add</button>
+    </div>
+    <div id="static-rows"></div>
+    <div class="hint" style="margin-top:7px">Example: <code>Version Id* = my_grid_v1</code> · <code>Oem Type* = AGENCY</code></div>
+  </div>
+  <div class="card">
+    <div class="ct">Column Defaults <span class="bx bx-pu">fallback when column is absent/empty</span>
+      <button class="btn btn-sec btn-sm" onclick="addColDefault()">+ Add</button>
+    </div>
+    <div id="col-default-rows"></div>
+    <div class="hint" style="margin-top:7px">
+      Set a fallback value for any output column when it would otherwise be blank.<br>
+      Common use: <code>Two Wheeler Category* = ANY</code> · <code>Body Type* = ANY</code> · <code>Fuel Type* = ANY</code> · <code>Bus Type* = ANY</code>
+    </div>
+  </div>
+  <!-- ── Column Transforms ── -->
+  <div class="card">
+    <div class="ct">Column Transforms <span class="bx bx-gr">apply math to any numeric column</span>
+      <button class="btn btn-sec btn-sm" onclick="addTransform()">+ Add</button>
+    </div>
+    <div id="transform-rows"></div>
+    <div class="hint" style="margin-top:7px">
+      Example: <code>Span Prct* × 100</code> converts <code>0.65 → 65</code>.
+      Operations: <strong>multiply, divide, add, subtract, round</strong>.
+      Non-numeric cells are left unchanged.
+    </div>
+  </div>
+
+  <!-- ── Output Format ── -->
+  <div class="card">
+    <div class="ct">Output Format <span class="bx bx-pu">select columns &amp; set order</span>
+      <span style="font-size:11px;color:var(--t2);margin-left:8px">drag ☰ to reorder</span>
+      <button class="btn btn-sec btn-sm" style="margin-left:auto" onclick="addOutputCol()">+ Add Column</button>
+      <button class="btn btn-sec btn-sm" onclick="autoFillOutputCols()">↺ Auto-fill from Inspection</button>
+    </div>
+    <!-- CSV upload strip -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;background:var(--bg2);border-radius:8px;border:1px dashed var(--bd)">
+      <span style="font-size:12px;color:var(--t2);white-space:nowrap">📂 Upload output CSV to load columns:</span>
+      <input type="file" id="out-csv-upload" accept=".csv" style="font-size:12px;flex:1;min-width:0"
+        onchange="loadOutputCsvHeaders(this)"/>
+      <span id="out-csv-status" style="font-size:11px;color:var(--ac3);white-space:nowrap"></span>
+    </div>
+    <div class="sb sb-info" style="margin-bottom:10px;font-size:12px">
+      Upload a sample output CSV to auto-load its headers, or leave empty to output <strong>all columns</strong> in default order. Drag ☰ to reorder, optionally rename columns.
+    </div>
+    <div id="output-format-rows" style="user-select:none"></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Output File</div>
+    <div class="fg" style="max-width:340px"><label>Output CSV File Name</label><input type="text" id="out-fn" value="agency_grid_output"/></div>
+  </div>
+  <div class="ar">
+    <button class="btn btn-sec" onclick="goStep(5)">← Back</button>
+    <button class="btn btn-am btn-lg" onclick="goStep(7)">Review &amp; Process →</button>
+  </div>
+</div>
+
+<!-- ── Step 7: Process ── -->
+<div class="panel" id="p-7">
+  <div class="ph"><h2>Process &amp; Export</h2></div>
+  <div class="card" id="summary-card">
+    <div class="ct">Configuration Summary</div>
+    <div id="summary-body"></div>
+  </div>
+  <div class="card">
+    <div class="ct">Run Processor</div>
+    <div id="proc-status"></div>
+    <button class="btn btn-am btn-lg" id="btn-run" onclick="runProcess()">▶ Run Agency Grid Processor</button>
+  </div>
+  <div id="result-section" style="display:none" class="fade">
+    <div class="stats-row" id="result-stats"></div>
+    <div class="card">
+      <div class="ct">Output Preview (first 5 rows)</div>
+      <div class="tw" id="result-preview"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Download</div>
+      <button class="btn btn-gr btn-lg" onclick="dlResult()">↓ Download CSV</button>
+    </div>
+  </div>
+  <div class="ar" style="margin-top:10px"><button class="btn btn-sec" onclick="goStep(6)">← Back</button></div>
+</div>
+
+<!-- ── Step 8: CSV Merger ── -->
+<div class="panel" id="p-8">
+  <div class="ph">
+    <h2>CSV Merger</h2>
+    <p>Add files one by one — each gets its own GWP mapping. All files merge into a single output.</p>
+  </div>
+
+  <!-- Drop zone -->
+  <div class="card">
+    <div class="ct">Add CSV Files <span class="bx bx-am">each file gets its own GWP mapping below</span></div>
+    <div class="uz" id="uz-merge"
+         ondragover="event.preventDefault();document.getElementById('uz-merge').classList.add('drag')"
+         ondragleave="document.getElementById('uz-merge').classList.remove('drag')"
+         ondrop="event.preventDefault();document.getElementById('uz-merge').classList.remove('drag');handleMergeFilesFromDrop(event.dataTransfer.files)">
+      <input type="file" id="fi-merge" accept=".csv" multiple onchange="handleMergeFiles(this.files)"/>
+      <div class="ui">📂</div>
+      <h3>Drop CSV files here or click to browse</h3>
+      <p>Multiple files OK — a row with GWP selector appears for each one</p>
+    </div>
+  </div>
+
+  <!-- Per-file GWP mapping table -->
+  <div class="card" id="mg-file-card" style="display:none">
+    <div class="ct">Per-File GWP Mapping
+      <span class="bx bx-pu" id="mg-file-count-badge"></span>
+    </div>
+    <div class="sb sb-info" style="margin-bottom:12px;font-size:11.5px">
+      💡 <code>Total Gwp Ll*</code> and <code>Total Gwp Ul*</code> from each source file will be written into the selected target column pair. All other GWP columns get sentinel defaults.
+    </div>
+    <table style="width:100%;border-collapse:collapse" id="mg-file-table">
+      <thead>
+        <tr>
+          <th style="background:var(--s3);padding:7px 10px;text-align:left;font-family:var(--mo);font-size:9.5px;color:var(--t2);border-bottom:1px solid var(--b1);text-transform:uppercase">File</th>
+          <th style="background:var(--s3);padding:7px 10px;text-align:left;font-family:var(--mo);font-size:9.5px;color:var(--t2);border-bottom:1px solid var(--b1);text-transform:uppercase;min-width:260px">GWP Target Column Pair</th>
+          <th style="background:var(--s3);padding:7px 10px;text-align:left;font-family:var(--mo);font-size:9.5px;color:var(--t2);border-bottom:1px solid var(--b1);text-transform:uppercase">Maps to</th>
+          <th style="background:var(--s3);padding:7px 10px;border-bottom:1px solid var(--b1);width:36px"></th>
+        </tr>
+      </thead>
+      <tbody id="mg-file-tbody"></tbody>
+    </table>
+  </div>
+
+
+  <!-- Column Sequence Card -->
+  <div class="card" id="mg-col-seq-card">
+    <div class="ct">Output Column Sequence
+      <span class="bx bx-pu">drag pills to reorder · all columns always included</span>
+      <button class="btn btn-sec btn-sm" style="margin-left:auto" onclick="resetMergeColOrder()">↺ Reset to Default</button>
+    </div>
+    <div class="sb sb-info" style="margin-bottom:10px;font-size:11.5px">
+      Drag and drop the column pills below to set the exact column order in the output CSV. All columns are always written — this only controls their sequence.
+    </div>
+    <div class="col-seq-grid" id="mg-col-seq"></div>
+  </div>
+
+  <!-- Output config -->
+  <div class="card">
+    <div class="ct">Output Configuration</div>
+    <div class="fr">
+      <div class="fg">
+        <label>Append to existing output file <span style="font-weight:400;color:var(--t3)">(optional)</span></label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="mg-append-sel" style="flex:1">
+            <option value="">— Create new file (don't append) —</option>
+          </select>
+          <button class="btn btn-sec btn-sm" onclick="loadOutputsList()">↺</button>
+        </div>
+        <div class="hint">Pick an existing output to append all new rows to it.</div>
+      </div>
+      <div class="fg">
+        <label>Output file name (without .csv)</label>
+        <input type="text" id="mg-out-name" value="common_primebroking_merged" placeholder="merged_output"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="ar" style="margin-bottom:16px">
+    <button class="btn btn-am btn-lg" id="btn-merge" onclick="runMerge()">⇌ Run Merger</button>
+  </div>
+  <div id="mg-status"></div>
+
+  <!-- Result -->
+  <div id="mg-result-section" style="display:none" class="fade">
+    <div class="stats-row" id="mg-result-stats"></div>
+    <div class="card">
+      <div class="ct">Per-File Summary</div>
+      <div id="mg-file-summary"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Output Preview <span class="bx bx-gr">first 5 rows · first 8 cols</span></div>
+      <div class="tw" id="mg-result-preview"></div>
+    </div>
+    <div class="ar">
+      <button class="btn btn-gr btn-lg" onclick="dlMergeResult()">⬇ Download Merged CSV</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ── AI Assistant widget ──────────────────────────────────────────────── -->
+<button class="ai-fab" id="ai-fab" onclick="toggleAI()" title="AI Assistant">
+  🤖<span class="ai-dot"></span>
+</button>
+
+<div class="ai-panel" id="ai-panel">
+  <div class="ai-head">
+    <div class="ai-avatar">🤖</div>
+    <div class="ai-head-txt">
+      <h4>AI Assistant</h4>
+      <p>Powered by Groq</p>
+    </div>
+    <button class="ai-close" onclick="toggleAI(false)">✕</button>
+  </div>
+  <div class="ai-ctx-pill" id="ai-ctx-pill"></div>
+  <div class="ai-body" id="ai-body"></div>
+  <div class="ai-suggest" id="ai-suggest"></div>
+  <div class="ai-input-row">
+    <textarea id="ai-input" placeholder="Ask how to do something, or ask me to edit your config…" onkeydown="aiKeydown(event)"></textarea>
+    <button class="ai-send" id="ai-send-btn" onclick="sendAIMessage()">➤</button>
+  </div>
+</div>
+
+<script>
+// ─── AI Assistant ─────────────────────────────────────────────────────────────
+const AI = { open:false, history:[], busy:false, statusChecked:false, configured:true };
+
+function toggleAI(force) {
+  const panel = document.getElementById('ai-panel');
+  AI.open = (force===undefined) ? !AI.open : force;
+  panel.classList.toggle('open', AI.open);
+  if (AI.open) {
+    if (!AI.statusChecked) checkAIStatus();
+    if (!document.getElementById('ai-body').children.length) aiGreet();
+    updateAIContextPill();
+    document.getElementById('ai-input').focus();
+  }
+}
+
+async function checkAIStatus() {
+  AI.statusChecked = true;
+  try {
+    const res = await fetch('api/ai/status');
+    const d = await res.json();
+    AI.configured = !!d.configured;
+    if (!AI.configured) {
+      aiAddMsg('bot', "Heads up — the AI Assistant isn't fully set up yet. The server admin needs to set a GROQ_API_KEY on the backend before I can respond. You can still browse the portal as usual!");
+    }
+  } catch(e) { /* silent — will surface on send */ }
+}
+
+function aiGreet() {
+  aiAddMsg('bot', "Hi! I'm your portal assistant. I can explain how any step works, or, once you've inspected your sheet and the Column Config table (Step 3) is populated, I can edit column mappings, GWP maps, static fields, and transforms for you directly. What do you need?");
+  renderAISuggestions();
+}
+
+function renderAISuggestions() {
+  const box = document.getElementById('ai-suggest');
+  const hasConfig = aiHasConfig();
+  const chips = hasConfig
+    ? ["Set Biz Mix Output for a column", "Add a static field", "Multiply Span Prct by 100"]
+    : ["Where do I upload my file?", "Special mode vs Normal mode?", "What is RTO Category for?"];
+  box.innerHTML = chips.map(c=>`<span class="ai-suggest-chip" onclick="aiUseSuggestion(this)">${esc(c)}</span>`).join('');
+}
+function aiUseSuggestion(el) {
+  document.getElementById('ai-input').value = el.textContent;
+  sendAIMessage();
+}
+
+function aiHasConfig() { return Array.isArray(S.colCfg) && S.colCfg.length > 0; }
+
+function updateAIContextPill() {
+  const pill = document.getElementById('ai-ctx-pill');
+  const hasConfig = aiHasConfig();
+  const modeLabel = S.mode === 'normal' ? 'Normal Mode' : 'Special Mode';
+  pill.className = 'ai-ctx-pill ' + (hasConfig ? 'ok' : 'warn');
+  pill.innerHTML = `<span class="dot"></span>${modeLabel} · ${hasConfig ? 'config loaded — I can edit it' : 'no config yet — inspect your sheet first, or ask me how'}`;
+}
+
+function aiKeydown(e) {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendAIMessage(); }
+}
+
+function aiAddMsg(role, text) {
+  const body = document.getElementById('ai-body');
+  const div = document.createElement('div');
+  div.className = 'ai-msg ' + role;
+  div.textContent = text;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+  return div;
+}
+
+function aiAddActionChips(actions) {
+  if (!actions || !actions.length) return;
+  const applied = actions.filter(a=>a.type!=='none' && a.type!=='navigate');
+  const nav = actions.find(a=>a.type==='navigate');
+  const body = document.getElementById('ai-body');
+  if (applied.length) {
+    const wrap = document.createElement('div');
+    wrap.className = 'ai-actions';
+    wrap.innerHTML = applied.map(a=>`<span class="ai-action-chip">✓ ${esc(aiDescribeAction(a))}</span>`).join('');
+    body.appendChild(wrap);
+  }
+  if (nav) {
+    const btn = document.createElement('button');
+    btn.className = 'ai-nav-btn';
+    btn.textContent = `→ Take me to Step ${nav.step}`;
+    btn.onclick = () => { goStep(nav.step); };
+    body.appendChild(btn);
+  }
+  body.scrollTop = body.scrollHeight;
+}
+
+function aiDescribeAction(a) {
+  switch(a.type) {
+    case 'set_col_field': return `Set col #${a.col_idx} ${a.field} → ${a.value}`;
+    case 'set_extra_field': return `Set col #${a.col_idx} extra field "${a.key}" → ${a.value}`;
+    case 'add_static_field': return `Added static field "${a.col}" = ${a.val}`;
+    case 'add_col_default': return `Added column default "${a.col}" → ${a.val}`;
+    case 'add_col_transform': return `Added transform: ${a.col} ${a.op} ${a.value}`;
+    case 'add_vg_row': return `Added GWP map for "${a.vol_rem}"`;
+    case 'add_agent_row': return `Added agent map "${a.imd_type}" → ${a.code}`;
+    case 'add_imd_gwp_row': return `Added IMD GWP map for "${a.imd_type}"`;
+    case 'add_norm_row': return `Added category normalization "${a.from}" → "${a.to}"`;
+    default: return a.type;
+  }
+}
+
+function gatherAIContext() {
+  return {
+    mode: S.mode,
+    sheet_name: document.getElementById('cfg-sheet')?.value || null,
+    col_cfg: (S.colCfg||[]).map(c=>({col_idx:c.col_idx, display:c.display, biz_mix_output:c.biz_mix_output,
+      rto_category:c.rto_category, extra_fields:c.extra_fields, enabled:c.enabled})),
+    vg_rows: S.vgRows || [],
+    agent_rows: S.agentRows || [],
+    imd_gwp_rows: S.imdGwpRows || [],
+    norm_rows: S.normRows || [],
+    static_fields: S.staticFields || [],
+    col_defaults: S.colDefaults || [],
+    col_transforms: S.colTransforms || [],
+  };
+}
+
+async function sendAIMessage() {
+  if (AI.busy) return;
+  const input = document.getElementById('ai-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  aiAddMsg('user', msg);
+  AI.history.push({role:'user', content:msg});
+  AI.busy = true;
+  document.getElementById('ai-send-btn').disabled = true;
+  const body = document.getElementById('ai-body');
+  const typing = document.createElement('div');
+  typing.className = 'ai-typing';
+  typing.innerHTML = '<span></span><span></span><span></span>';
+  body.appendChild(typing);
+  body.scrollTop = body.scrollHeight;
+
+  try {
+    const res = await fetch('api/ai/chat', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message: msg, history: AI.history.slice(-10), context: gatherAIContext()})});
+    const d = await res.json();
+    typing.remove();
+    if (d.error) { aiAddMsg('err', '⚠ ' + d.error); AI.busy=false; document.getElementById('ai-send-btn').disabled=false; return; }
+    aiAddMsg('bot', d.reply || '(no response)');
+    AI.history.push({role:'assistant', content:d.reply || ''});
+    if (d.actions && d.actions.length) {
+      applyAIActions(d.actions);
+      aiAddActionChips(d.actions);
+    }
+    updateAIContextPill();
+    renderAISuggestions();
+  } catch(e) {
+    typing.remove();
+    aiAddMsg('err', '⚠ Could not reach the assistant: ' + e.message);
+  }
+  AI.busy = false;
+  document.getElementById('ai-send-btn').disabled = false;
+}
+
+function applyAIActions(actions) {
+  for (const a of actions) {
+    try {
+      if (a.type === 'set_col_field' && a.col_idx !== undefined) {
+        const row = S.colCfg.find(c=>c.col_idx===a.col_idx);
+        if (row && ['biz_mix_output','rto_category','enabled'].includes(a.field)) {
+          row[a.field] = a.field==='enabled' ? !!a.value : a.value;
+          renderColTable();
+        }
+      } else if (a.type === 'set_extra_field' && a.col_idx !== undefined) {
+        const row = S.colCfg.find(c=>c.col_idx===a.col_idx);
+        if (row) {
+          row.extra_fields = row.extra_fields || {};
+          row.extra_fields[a.key] = a.value;
+          renderColTable();
+        }
+      } else if (a.type === 'add_static_field' && a.col) {
+        S.staticFields.push({col:a.col, val:a.val||''});
+        renderStaticFields();
+      } else if (a.type === 'add_col_default' && a.col) {
+        S.colDefaults.push({col:a.col, val:a.val||''});
+        renderColDefaults();
+      } else if (a.type === 'add_col_transform' && a.col && a.op) {
+        S.colTransforms.push({col:a.col, op:a.op, value:a.value||'1'});
+        renderTransforms();
+      } else if (a.type === 'add_vg_row' && a.vol_rem) {
+        S.vgRows.push({vol_rem:a.vol_rem, ll_col:a.ll_col||'', ul_col:a.ul_col||''});
+        renderVgRows();
+      } else if (a.type === 'add_agent_row' && a.imd_type) {
+        S.agentRows.push({imd_type:a.imd_type, code:a.code||''});
+        renderAgentRows();
+      } else if (a.type === 'add_imd_gwp_row' && a.imd_type) {
+        S.imdGwpRows.push({imd_type:a.imd_type, ll_col:a.ll_col||'', ul_col:a.ul_col||''});
+        renderImdGwpRows();
+      } else if (a.type === 'add_norm_row' && a.from) {
+        S.normRows.push({from:a.from, to:a.to||''});
+        renderNormRows();
+      }
+    } catch(e) { console.error('AI action failed', a, e); }
+  }
+}
+</script>
+
+<script>
+// ──────────────── State ────────────────────────────────────────────────────────
+const S = {
+  mode:'special', sessionId:null, filepath:null, rtoPath:null, sheets:[],
+  inspectData:null, result:null,
+  colCfg:[],       // [{col_idx, display, parent_biz, sub_label, biz_mix_output, rto_category, extra_fields{}, enabled, matched}]
+  vgRows:[],       // [{vol_rem, ll_col, ul_col}]
+  agentRows:[],    // [{imd_type, code}]
+  imdGwpRows:[],   // [{imd_type, ll_col, ul_col}] — per-IMD-type GWP fallback for std-grid rows
+  normRows:[],     // [{from, to}]
+  staticFields:[]  // [{col, val}]
+  ,colDefaults:[]  // [{col, val}] — fallback for absent/empty output columns
+  ,colTransforms:[]  // [{col, op, value}] — math transforms on numeric cols
+  ,outputFormat:[]   // [{col, rename}] in desired output order
+  ,extraMetaCols:[]  // [{label, col_idx}] — optional month-specific meta columns
+};
+const files = {};
+
+// ──────────────── Mode ─────────────────────────────────────────────────────────
+function setMode(m) {
+  S.mode=m;
+  document.getElementById('mode-special').className='mode-btn'+(m==='special'?' ms':'');
+  document.getElementById('mode-normal').className ='mode-btn'+(m==='normal'?' mn':'');
+  const t=document.getElementById('mode-tag');
+  if(m==='special'){t.className='mode-tag mt-s';t.textContent='Special: IRDA/Block → output IRDA row';}
+  else{t.className='mode-tag mt-n';t.textContent='Normal: IRDA/Block → skip that cell only';}
+}
+
+// ──────────────── Navigation ───────────────────────────────────────────────────
+function goStep(n){
+  for(let i=1;i<=8;i++){
+    const p=document.getElementById(`p-${i}`);
+    const b=document.getElementById(`ni-${i}`);
+    if(p) p.classList.toggle('active',i===n);
+    if(b) b.classList.toggle('active',i===n);
+  }
+  if(n===7) buildSummary();
+  if(n===8) loadOutputsList();
+  window.scrollTo(0,0);
+}
+function markDone(n){document.getElementById(`nb-${n}`)?.closest('.ni').classList.add('done');}
+
+// ──────────────── File Handling ────────────────────────────────────────────────
+function doDrag(e,t){e.preventDefault();document.getElementById(`uz-${t}`).classList.add('drag');}
+function doDragLeave(t){document.getElementById(`uz-${t}`).classList.remove('drag');}
+function doDrop(e,t){e.preventDefault();doDragLeave(t);if(e.dataTransfer.files[0])setFile(t,e.dataTransfer.files[0]);}
+function handleFile(t){const i=document.getElementById(`fi-${t}`);if(i.files[0])setFile(t,i.files[0]);}
+function setFile(t,f){
+  files[t]=f;
+  document.getElementById(`uz-${t}`).classList.add('has-file');
+  document.getElementById(`fd-${t}`).innerHTML=`<div class="fc">📄 ${esc(f.name)} (${(f.size/1024).toFixed(1)} KB)</div>`;
+  if(t==='main') document.getElementById('btn-upload').disabled=false;
+}
+
+async function doUpload(){
+  const btn=document.getElementById('btn-upload');
+  btn.disabled=true; btn.innerHTML='<div class="sp"></div> Uploading…';
+  const fd=new FormData();
+  fd.append('file',files['main']);
+  if(files['rto']) fd.append('rto_file',files['rto']);
+  try{
+    const r=await fetch('api/upload',{method:'POST',body:fd});
+    const d=await r.json();
+    if(d.error) throw new Error(d.error);
+    S.sessionId=d.session_id; S.filepath=d.filepath; S.rtoPath=d.rto_filepath; S.sheets=d.sheets;
+    const sel=document.getElementById('cfg-sheet');
+    sel.innerHTML=d.sheets.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+    // Smart sheet selection
+    if(S._pendingSheetName && d.sheets.includes(S._pendingSheetName)){
+      sel.value=S._pendingSheetName; S._pendingSheetName=null;
+    } else {
+      const prefs=['Special Matrix-Comp.-1-31','Special(different)-1-31','Special Matrix','Sheet1'];
+      for(const p of prefs) if(d.sheets.includes(p)){sel.value=p;break;}
+    }
+    markDone(1); btn.innerHTML='Upload &amp; Continue →'; btn.disabled=false;
+    goStep(2);
+  }catch(e){btn.disabled=false;btn.innerHTML='Upload &amp; Continue →';alert(e.message);}
+}
+
+// ──────────────── Inspect ─────────────────────────────────────────────────────
+async function doInspect(){
+  const el=document.getElementById('inspect-result');
+  el.innerHTML=`<div class="sb sb-info"><div class="sp"></div> Inspecting sheet structure…</div>`;
+  try{
+    const r=await fetch('api/inspect',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        filepath:S.filepath,
+        sheet_name:document.getElementById('cfg-sheet').value,
+        header_rows:[+document.getElementById('cfg-hr1').value,
+                     +document.getElementById('cfg-hr2').value,
+                     +document.getElementById('cfg-hr3').value],
+        data_start_row:+document.getElementById('cfg-dsr').value,
+        start_col:+document.getElementById('cfg-sc').value
+      })});
+    const d=await r.json();
+    if(d.error) throw new Error(d.error);
+    S.inspectData=d;
+
+    const matched=d.col_defs.filter(c=>c.matched_default).length;
+    const total=d.col_defs.filter(c=>c.display&&c.display.trim()).length;
+
+    el.innerHTML=`<div class="card fade">
+      <div class="ct">Sheet Inspected
+        <span class="bx bx-am">${total} rate columns</span>
+        <span class="bx bx-gr">${matched} auto-matched</span>
+        <span class="bx bx-am">${d.max_row} data rows</span>
+      </div>
+      <div style="margin-bottom:8px">
+        ${d.col_defs.slice(0,25).map(c=>`<span class="chip ${c.matched_default?'chip-gr':'chip-am'}">${esc(c.display)}</span>`).join('')}
+        ${d.col_defs.length>25?`<span class="chip" style="background:var(--s3);color:var(--t2)">+${d.col_defs.length-25} more</span>`:''}
+      </div>
+    </div>`;
+
+    // Populate col config
+    S.colCfg = d.col_defs
+      .filter(c=>c.display && c.display.trim())
+      .map(c=>({
+        col_idx:c.col_idx, display:c.display,
+        parent_biz:c.parent_biz, sub_label:c.sub_label,
+        biz_mix_output:c.biz_mix_output, rto_category:c.rto_category,
+        extra_fields:c.extra_fields||{}, enabled:true, matched:c.matched_default
+      }));
+    renderColTable();
+    document.getElementById('col-count-badge').textContent=`${S.colCfg.length} cols`;
+    document.getElementById('col-match-badge').textContent=`${matched} auto-matched`;
+
+    // Populate IMD types
+    document.getElementById('imd-detected').textContent=d.imd_values.join(', ')||'—';
+    buildAgentRowsFromInspect(d.imd_values);
+
+    // Populate vol GWP rows
+    buildVgRowsFromInspect(d.vol_values);
+    document.getElementById('vol-detected-hint').innerHTML=
+      'Detected values: '+d.vol_values.map(v=>`<span class="chip chip-am">${esc(v)}</span>`).join('');
+
+    document.getElementById('btn-to-3').disabled=false;
+    markDone(2);
+  }catch(e){
+    el.innerHTML=`<div class="sb sb-err">❌ ${esc(e.message)}</div>`;
+  }
+}
+
+// ──────────────── Column Config Table ─────────────────────────────────────────
+function efToText(ef){ return Object.entries(ef||{}).map(([k,v])=>`${k}=${v}`).join('\n'); }
+function textToEf(t){
+  const o={};
+  (t||'').split('\n').forEach(l=>{const i=l.indexOf('=');if(i>0){o[l.slice(0,i).trim()]=l.slice(i+1).trim();}});
+  return o;
+}
+
+function renderColTable(){
+  const tbody=document.getElementById('col-cfg-body');
+  tbody.innerHTML=S.colCfg.map((c,i)=>`
+    <tr class="${c.matched?'matched':'unmatched'}">
+      <td style="color:var(--t3);font-size:10px;font-family:var(--mo);white-space:nowrap">
+        ${c.col_idx}<br/><span class="chip ${c.matched?'chip-gr':'chip-am'}">${c.matched?'auto':'manual'}</span>
+      </td>
+      <td style="font-family:var(--mo);font-size:10px;color:${c.matched?'var(--ac3)':'var(--ac)'}">
+        ${esc(c.display)}<br/>
+        <span style="color:var(--t3)">${esc(c.parent_biz)} | ${esc(c.sub_label)}</span>
+      </td>
+      <td><input type="text" value="${esc(c.biz_mix_output)}" onchange="S.colCfg[${i}].biz_mix_output=this.value"/></td>
+      <td><input type="text" value="${esc(c.rto_category)}" onchange="S.colCfg[${i}].rto_category=this.value"/></td>
+      <td><textarea onchange="S.colCfg[${i}].extra_fields=textToEf(this.value)">${esc(efToText(c.extra_fields))}</textarea></td>
+      <td style="text-align:center"><input type="checkbox" ${c.enabled?'checked':''} onchange="S.colCfg[${i}].enabled=this.checked"/></td>
+    </tr>`).join('');
+}
+
+function addColRow(){
+  S.colCfg.push({col_idx:0,display:'New',parent_biz:'',sub_label:'',biz_mix_output:'',rto_category:'',extra_fields:{},enabled:true,matched:false});
+  renderColTable();
+}
+
+// ──────────────── Vol GWP Rows ─────────────────────────────────────────────────
+const VOL_GWP_DEFAULTS = {
+  'tractor,harvester':{ll:'Totalgwp TractaHarvester Ll*',ul:'Totalgwp TractaHarvester Ul*'},
+  'tractor':          {ll:'Totalgwp Tractor Ll*',ul:'Totalgwp Tractor Ul*'},
+  'tractor old':      {ll:'Totalgwp Old Tractor Ll*',ul:'Totalgwp Old Tractor Ul*'},
+  'pcv-bus':          {ll:'Totalgwp PCV Bus Ll*',ul:'Totalgwp PCV Bus Ul*'},
+  'pcv-3w':           {ll:'PCV 3W GWP Ll*',ul:'PCV 3W GWP Ul*'},
+  'gcv 7.5t - 12t':   {ll:'Totalgwp 7500 12000 Ll*',ul:'Totalgwp 7500 12000 Ul*'},
+  'gcv 12t - 20t':    {ll:'Total GWP 12 20t Comp Ll*',ul:'Total GWP 12 20t Comp Ul*'},
+  'gcv <=2.5 t':      {ll:'GCV TP Less 2500 Total GWP Ll*',ul:'GCV TP Less 2500 Total GWP Ul*'},
+};
+
+function buildVgRowsFromInspect(volVals){
+  const added=new Set();
+  S.vgRows=[];
+  // First: detected vol values
+  volVals.forEach(v=>{
+    const d=VOL_GWP_DEFAULTS[v.toLowerCase()]||{ll:'',ul:''};
+    S.vgRows.push({vol_rem:v,ll_col:d.ll,ul_col:d.ul});
+    added.add(v.toLowerCase());
+  });
+  // Then add remaining defaults not yet seen
+  Object.entries(VOL_GWP_DEFAULTS).forEach(([k,v])=>{
+    if(!added.has(k)) S.vgRows.push({vol_rem:k,ll_col:v.ll,ul_col:v.ul});
+  });
+  renderVgRows();
+}
+
+function addVgRow(){S.vgRows.push({vol_rem:'',ll_col:'',ul_col:''});renderVgRows();}
+function renderVgRows(){
+  document.getElementById('vg-rows').innerHTML=S.vgRows.map((r,i)=>`
+    <div class="vg-row">
+      <div class="fg" style="margin:0"><label>Volume Consideration Value</label>
+        <input type="text" value="${esc(r.vol_rem)}" onchange="S.vgRows[${i}].vol_rem=this.value" placeholder="e.g. PCV-3W"/></div>
+      <div class="fg" style="margin:0"><label>GWP LL Output Column</label>
+        <input type="text" value="${esc(r.ll_col)}" onchange="S.vgRows[${i}].ll_col=this.value" placeholder="PCV 3W GWP Ll*"/></div>
+      <div class="fg" style="margin:0"><label>GWP UL Output Column</label>
+        <input type="text" value="${esc(r.ul_col)}" onchange="S.vgRows[${i}].ul_col=this.value" placeholder="PCV 3W GWP Ul*"/></div>
+      <button class="btn btn-xs btn-re" onclick="S.vgRows.splice(${i},1);renderVgRows()" style="margin-bottom:11px">✕</button>
+    </div>`).join('');
+}
+
+// ──────────────── Agent Map ────────────────────────────────────────────────────
+// ──────────────── IMD Type → GWP Column Map (for std-grid rows) ───────────────
+const IMD_GWP_DEFAULTS = {
+  'Agency':        {ll:'Totalgwp Keybrok Agency Ll*', ul:'Totalgwp Keybrok Agency Ul*'},
+  'Key Broking':   {ll:'Totalgwp Keybrok Agency Ll*', ul:'Totalgwp Keybrok Agency Ul*'},
+  'Prime Broking': {ll:'Total Gwp Ll*',               ul:'Total Gwp Ul*'},
+};
+
+function buildAgentRowsFromInspect(imdVals){
+  const defaults={'Agency':'Agency','Key Broking':'Key_Broking','Prime Broking':'Prime_Broking'};
+  S.agentRows=Object.entries(defaults).map(([k,v])=>({imd_type:k,code:v}));
+  imdVals.forEach(v=>{if(!S.agentRows.find(r=>r.imd_type===v)) S.agentRows.push({imd_type:v,code:v});});
+  renderAgentRows();
+  // Also seed the per-IMD-type GWP map from detected values
+  buildImdGwpRowsFromInspect(imdVals);
+}
+function addAgentRow(){S.agentRows.push({imd_type:'',code:''});renderAgentRows();}
+function renderAgentRows(){
+  document.getElementById('agent-rows').innerHTML=S.agentRows.map((r,i)=>`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:7px">
+      <input type="text" placeholder="IMD Type" value="${esc(r.imd_type)}" onchange="S.agentRows[${i}].imd_type=this.value" style="flex:1"/>
+      <span style="color:var(--t3);font-family:var(--mo);font-size:12px">→</span>
+      <input type="text" placeholder="Agent Group Code" value="${esc(r.code)}" onchange="S.agentRows[${i}].code=this.value" style="flex:1"/>
+      <button class="btn btn-xs btn-re" onclick="S.agentRows.splice(${i},1);renderAgentRows()">✕</button>
+    </div>`).join('');
+}
+
+function buildImdGwpRowsFromInspect(imdVals){
+  const added=new Set();
+  // Start with known defaults
+  S.imdGwpRows=Object.entries(IMD_GWP_DEFAULTS).map(([k,v])=>{
+    added.add(k);
+    return {imd_type:k, ll_col:v.ll, ul_col:v.ul};
+  });
+  // Add detected IMD types not already covered
+  imdVals.forEach(v=>{
+    if(!added.has(v)){
+      const d=IMD_GWP_DEFAULTS[v]||{ll:'',ul:''};
+      S.imdGwpRows.push({imd_type:v, ll_col:d.ll, ul_col:d.ul});
+    }
+  });
+  renderImdGwpRows();
+}
+
+function addImdGwpRow(){S.imdGwpRows.push({imd_type:'',ll_col:'',ul_col:''});renderImdGwpRows();}
+function renderImdGwpRows(){
+  const el=document.getElementById('imd-gwp-rows');
+  if(!el)return;
+  if(!S.imdGwpRows||!S.imdGwpRows.length){
+    el.innerHTML='<p class="hint" style="font-style:italic;margin:2px 0">No entries — click "+ Add IMD Type" or run sheet inspection to auto-populate.</p>';
+    return;
+  }
+  el.innerHTML=S.imdGwpRows.map((r,i)=>`
+    <div style="display:grid;grid-template-columns:1.2fr 1.6fr 1.6fr 30px;gap:8px;align-items:center;margin-bottom:7px">
+      <input type="text" placeholder="e.g. Agency" value="${esc(r.imd_type)}"
+        onchange="S.imdGwpRows[${i}].imd_type=this.value"
+        style="background:var(--bg);border:1px solid var(--b2);border-radius:5px;padding:5px 8px;color:var(--tx);font-size:12px;width:100%"/>
+      <input type="text" placeholder="GWP LL column name" value="${esc(r.ll_col)}"
+        onchange="S.imdGwpRows[${i}].ll_col=this.value"
+        style="background:var(--bg);border:1px solid var(--b2);border-radius:5px;padding:5px 8px;color:var(--tx);font-size:12px;width:100%"/>
+      <input type="text" placeholder="GWP UL column name" value="${esc(r.ul_col)}"
+        onchange="S.imdGwpRows[${i}].ul_col=this.value"
+        style="background:var(--bg);border:1px solid var(--b2);border-radius:5px;padding:5px 8px;color:var(--tx);font-size:12px;width:100%"/>
+      <button class="btn btn-xs btn-re" onclick="S.imdGwpRows.splice(${i},1);renderImdGwpRows()">✕</button>
+    </div>`).join('');
+}
+
+// ──────────────── RTO Category Toggle ─────────────────────────────────────────
+function toggleRtoCatCol(){
+  const use = document.getElementById('rto-use-cat').checked;
+  document.getElementById('rto-cat-col-wrap').style.display = use ? '' : 'none';
+}
+
+// ──────────────── Norm Rows ────────────────────────────────────────────────────
+function initNormRows(){
+  S.normRows=[
+    {from:'PCV 3W',to:'PCV'},{from:'PCV-BUS',to:'PCV'},{from:'PCV-TAXI',to:'PCV'},
+    {from:'MISD',to:'MISC-D'},{from:'MISD GARBAGE',to:'MISC-D'},{from:'TRACTOR',to:'MISC-D'},
+  ];
+  renderNormRows();
+}
+function addNormRow(){S.normRows.push({from:'',to:''});renderNormRows();}
+function renderNormRows(){
+  document.getElementById('norm-rows').innerHTML=S.normRows.map((r,i)=>`
+    <div style="display:grid;grid-template-columns:1fr auto 1fr 30px;gap:8px;align-items:center;margin-bottom:6px">
+      <input type="text" placeholder="e.g. PCV 3W" value="${esc(r.from)}" onchange="S.normRows[${i}].from=this.value"/>
+      <span style="color:var(--t3);font-family:var(--mo)">→</span>
+      <input type="text" placeholder="e.g. PCV" value="${esc(r.to)}" onchange="S.normRows[${i}].to=this.value"/>
+      <button class="btn btn-xs btn-re" onclick="S.normRows.splice(${i},1);renderNormRows()">✕</button>
+    </div>`).join('');
+}
+
+// ──────────────── Static Fields ───────────────────────────────────────────────
+function initStaticFields(){
+  S.staticFields=[{col:'Version Id*',val:''}];
+  S.extraMetaCols=[];
+  renderExtraMetaRows();
+  renderStaticFields();
+}
+function addExtraMetaRow(){S.extraMetaCols.push({label:'',col_idx:0});renderExtraMetaRows();}
+function renderExtraMetaRows(){
+  const el=document.getElementById('extra-meta-rows');
+  if(!el)return;
+  if(!S.extraMetaCols.length){
+    el.innerHTML='<p class="hint" style="margin:2px 0;font-style:italic;">No extra columns configured — click "+ Add Column" to add one.</p>';
+    return;
+  }
+  el.innerHTML=S.extraMetaCols.map((r,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.15);border-radius:6px;padding:6px 10px;">
+      <div class="fg" style="flex:2;margin:0;">
+        <label style="font-size:11px;margin-bottom:2px;">Output Label (column name in CSV)</label>
+        <input type="text" placeholder="e.g. Detariff Discount Ll*" value="${esc(r.label)}"
+          onchange="S.extraMetaCols[${i}].label=this.value" style="width:100%;"/>
+      </div>
+      <div class="fg" style="flex:1;margin:0;">
+        <label style="font-size:11px;margin-bottom:2px;">Column # in sheet</label>
+        <input type="number" min="0" value="${r.col_idx}"
+          onchange="S.extraMetaCols[${i}].col_idx=+this.value" style="width:100%;"/>
+      </div>
+      <button class="btn btn-xs btn-re" onclick="S.extraMetaCols.splice(${i},1);renderExtraMetaRows()" style="flex-shrink:0;margin-top:14px;">✕</button>
+    </div>`).join('');
+}
+
+function addStaticField(){S.staticFields.push({col:'',val:''});renderStaticFields();}
+function renderStaticFields(){
+  document.getElementById('static-rows').innerHTML=S.staticFields.map((r,i)=>`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:7px">
+      <input type="text" placeholder="Output Column Name" value="${esc(r.col)}" onchange="S.staticFields[${i}].col=this.value" style="flex:1"/>
+      <span style="color:var(--t3);font-family:var(--mo)">=</span>
+      <input type="text" placeholder="Value for every row" value="${esc(r.val)}" onchange="S.staticFields[${i}].val=this.value" style="flex:1"/>
+      <button class="btn btn-xs btn-re" onclick="S.staticFields.splice(${i},1);renderStaticFields()">✕</button>
+    </div>`).join('');
+}
+
+// ──────────────── Column Defaults ─────────────────────────────────────────────
+function initColDefaults(){
+  // Pre-populate common "ANY" fallback columns
+  S.colDefaults=[
+    {col:'Two Wheeler Category*', val:'ANY'},
+    {col:'Body Type*',            val:'ANY'},
+    {col:'Fuel Type*',            val:'ANY'},
+    {col:'Bus Type*',             val:'ANY'},
+    {col:'Type Of Business*',     val:'ANY'},
+  ];
+  renderColDefaults();
+}
+function addColDefault(){S.colDefaults.push({col:'',val:''});renderColDefaults();}
+function renderColDefaults(){
+  document.getElementById('col-default-rows').innerHTML=S.colDefaults.map((r,i)=>`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:7px">
+      <input type="text" placeholder="Output Column Name" value="${esc(r.col)}" onchange="S.colDefaults[${i}].col=this.value" style="flex:1"/>
+      <span style="color:var(--t3);font-family:var(--mo)">→</span>
+      <input type="text" placeholder="Default value if absent/empty" value="${esc(r.val)}" onchange="S.colDefaults[${i}].val=this.value" style="flex:1"/>
+      <button class="btn btn-xs btn-re" onclick="S.colDefaults.splice(${i},1);renderColDefaults()">✕</button>
+    </div>`).join('');
+}
+
+// ──────────────── Column Transforms ──────────────────────────────────────────────
+const TRANSFORM_OPS = ['multiply','divide','add','subtract','round'];
+function initTransforms(){
+  // Pre-populate with the most common use-case
+  S.colTransforms=[{col:'Span Prct*', op:'multiply', value:'100'}];
+  renderTransforms();
+}
+function addTransform(){S.colTransforms.push({col:'',op:'multiply',value:'100'});renderTransforms();}
+function renderTransforms(){
+  document.getElementById('transform-rows').innerHTML=S.colTransforms.map((r,i)=>`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+      <input type="text" placeholder="Column name (exact)" value="${esc(r.col)}"
+        onchange="S.colTransforms[${i}].col=this.value" style="flex:2;min-width:140px"/>
+      <select onchange="S.colTransforms[${i}].op=this.value" style="flex:1;min-width:110px">
+        ${TRANSFORM_OPS.map(op=>`<option value="${op}" ${r.op===op?'selected':''}>${op}</option>`).join('')}
+      </select>
+      <span style="color:var(--t3);font-family:var(--mo)">by</span>
+      <input type="number" step="any" placeholder="value" value="${esc(r.value)}"
+        onchange="S.colTransforms[${i}].value=this.value" style="flex:1;min-width:70px"/>
+      <button class="btn btn-xs btn-re" onclick="S.colTransforms.splice(${i},1);renderTransforms()">✕</button>
+    </div>`).join('');
+}
+
+// ──────────────── Output Format ───────────────────────────────────────────────
+let _dragIdx=null;
+function initOutputFormat(){S.outputFormat=[];renderOutputFormat();}
+
+function loadOutputCsvHeaders(input){
+  const file = input.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('out-csv-status');
+  statusEl.textContent = 'Reading…';
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const text = e.target.result;
+      // Parse only the first line (header row) — handle quoted headers too
+      const firstLine = text.split(/\r?\n/)[0];
+      const headers = [];
+      let cur = '', inQ = false;
+      for(let i=0;i<firstLine.length;i++){
+        const ch = firstLine[i];
+        if(ch==='"'){ inQ=!inQ; }
+        else if(ch===','&&!inQ){ headers.push(cur.trim()); cur=''; }
+        else { cur+=ch; }
+      }
+      if(cur.trim()) headers.push(cur.trim());
+      if(!headers.length){ statusEl.style.color='var(--re)'; statusEl.textContent='No headers found'; return; }
+
+      // Build a list of all known processor-side column names from inspection data
+      // These are the names the processor actually writes into the DataFrame
+      const inspectCols = [];
+      if(S.inspectData){
+        (S.inspectData.meta_defs||[]).forEach(c=>inspectCols.push(c.display));
+        (S.inspectData.col_defs||[]).forEach(c=>inspectCols.push(c.display));
+      }
+      // Also include well-known processor output column names (from config defaults)
+      const knownProcessorCols = [
+        'Version Id*','Parent Agent Code*','Primary Agent Code*','Agent Group Code*',
+        'Biz Mix*','Span Outgo*','Span Prct*','Rto Code*','Rto Cluster*',
+        'Total Gwp Ll*','Total Gwp Ul*','Totalgwp Keybrok Agency Ll*','Totalgwp Keybrok Agency Ul*',
+        'Totalgwp Pvt Car Ll*','Totalgwp Pvt Car Ul*','Totalgwp Pvtcar1plus1 Ll*','Totalgwp Pvtcar1plus1 Ul*',
+        'Totalgwp Satp Ll*','Totalgwp Satp Ul*','Totalgwp Tractor Ll*','Totalgwp Tractor Ul*',
+        'Gross Vehicle Weight Ll*','Gross Vehicle Weight Ul*',
+        'Cubic Capacity Ll*','Cubic Capacity Ul*',
+        'Ncb Ll*','Ncb Ul*','Vehicle Age Ll*','Vehicle Age Ul*',
+        'Two Wheeler Category*','Type Of Business*','Fuel Type*','Body Type*','Bus Type*',
+        ...inspectCols
+      ];
+      const allCols = [...new Set(knownProcessorCols)];
+
+      // Helper: normalize a string for fuzzy matching
+      // "parent_agent_code" → "parentagentcode", "Parent Agent Code*" → "parentagentcode"
+      function norm(s){ return s.toLowerCase().replace(/[\s_\-*]+/g,''); }
+
+      const normMap = {};
+      allCols.forEach(c=>{ normMap[norm(c)] = c; });
+
+      let matched=0, unmatched=0;
+      S.outputFormat = headers.map(h=>{
+        const procCol = normMap[norm(h)];
+        if(procCol){
+          matched++;
+          // If the CSV header is already identical to the processor col name, no rename needed
+          const rename = (h === procCol) ? '' : h;
+          return {col: procCol, rename};
+        } else {
+          unmatched++;
+          // Can't auto-match — put the CSV header in col so user can fix it manually
+          return {col: h, rename: ''};
+        }
+      });
+
+      renderOutputFormat();
+      statusEl.style.color = unmatched > 0 ? 'var(--ac2)' : 'var(--ac3)';
+      statusEl.textContent = unmatched > 0
+        ? `✓ ${matched} matched, ⚠ ${unmatched} unmatched (highlighted)`
+        : `✓ ${headers.length} columns matched`;
+
+      // Re-render with highlight flags for unmatched rows
+      const flags = headers.map(h=>!normMap[norm(h)]);
+      if(unmatched > 0) renderOutputFormat(flags);
+      input.value='';
+    } catch(err){
+      statusEl.style.color='var(--re)';
+      statusEl.textContent='Error: '+err.message;
+    }
+  };
+  reader.onerror = ()=>{ statusEl.style.color='var(--re)'; statusEl.textContent='Failed to read file'; };
+  reader.readAsText(file);
+}
+
+function autoFillOutputCols(){
+  // Pull column names from the last inspection result
+  const cols = S.inspectData?.col_defs?.map(c=>c.display)||[];
+  const meta  = S.inspectData?.meta_defs?.map(c=>c.display)||[];
+  const all = [...new Set([...meta,...cols])];
+  if(!all.length){alert('Run sheet inspection first (Step 2)');return;}
+  S.outputFormat = all.map(c=>({col:c,rename:''}));
+  renderOutputFormat();
+}
+
+function addOutputCol(){S.outputFormat.push({col:'',rename:''});renderOutputFormat();}
+
+function renderOutputFormat(unmatchedFlags){
+  const rows = S.outputFormat;
+  document.getElementById('output-format-rows').innerHTML = rows.length===0
+    ? '<div style="color:var(--t3);font-size:12px;padding:6px 0">No columns configured — all columns will be output in default order.</div>'
+    : rows.map((r,i)=>{
+      const warn = unmatchedFlags && unmatchedFlags[i];
+      const rowBorder = warn ? 'border:1px solid var(--ac2);border-radius:6px;padding:3px 4px;' : '';
+      const warnIcon = warn ? '<span title="Could not auto-match — fix column name" style="color:var(--ac2);font-size:13px;flex-shrink:0">&#9888;</span>' : '';
+      return '<div class="of-row" draggable="true" ondragstart="S._dragIdx='+i+'" ondragover="event.preventDefault()" ondrop="ofDrop(event,'+i+')" style="display:flex;gap:8px;align-items:center;margin-bottom:6px;cursor:grab;'+rowBorder+'">'
+        + '<span style="color:var(--t3);cursor:grab;font-size:16px;padding:0 4px;flex-shrink:0">&#9776;</span>'
+        + '<span style="color:var(--t3);font-family:var(--mo);font-size:10px;min-width:18px;text-align:right">'+(i+1)+'</span>'
+        + '<input type="text" placeholder="Processor column name" value="'+esc(r.col)+'" onchange="S.outputFormat['+i+'].col=this.value" style="flex:2;min-width:140px'+(warn?';border-color:var(--ac2)':'')+'"\/>'
+        + '<span style="color:var(--t3);font-family:var(--mo);font-size:11px">&rarr;<\/span>'
+        + '<input type="text" placeholder="Rename in output (optional)" value="'+esc(r.rename)+'" onchange="S.outputFormat['+i+'].rename=this.value" style="flex:2;min-width:120px"\/>'
+        + warnIcon
+        + '<button class="btn btn-xs btn-re" onclick="S.outputFormat.splice('+i+',1);renderOutputFormat()">&#10005;<\/button>'
+        + '<\/div>';
+    }).join('');
+}
+
+function ofDrop(event,toIdx){
+  event.preventDefault();
+  const from = S._dragIdx;
+  if(from===null||from===toIdx)return;
+  const moved=S.outputFormat.splice(from,1)[0];
+  S.outputFormat.splice(toIdx,0,moved);
+  S._dragIdx=null;
+  renderOutputFormat();
+}
+
+// ──────────────── Summary ──────────────────────────────────────────────────────
+function buildSummary(){
+  const en=S.colCfg.filter(c=>c.enabled).length;
+  const ma=S.colCfg.filter(c=>c.matched&&c.enabled).length;
+  document.getElementById('summary-body').innerHTML=`
+    <div class="fr3">
+      <div><div class="hint">FILE</div><div style="font-family:var(--mo);font-size:11px;margin-top:4px;color:var(--ac)">${esc(S.filepath?.split('/').pop()||'—')}</div></div>
+      <div><div class="hint">MODE</div><div style="font-size:19px;font-weight:700;margin-top:3px;color:${S.mode==='special'?'var(--ac2)':'var(--ac4)'}">${S.mode.toUpperCase()}</div></div>
+      <div><div class="hint">RTO</div><div style="font-family:var(--mo);font-size:11px;margin-top:4px">${S.rtoPath?esc(S.rtoPath.split('/').pop()):'Not uploaded'}</div></div>
+    </div><hr class="divider">
+    <div class="fr4">
+      <div class="stat"><div class="val" style="color:var(--ac)">${en}</div><div class="lbl">Enabled Cols</div></div>
+      <div class="stat"><div class="val" style="color:var(--ac3)">${ma}</div><div class="lbl">Auto-Matched</div></div>
+      <div class="stat"><div class="val">${S.vgRows.filter(r=>r.vol_rem).length}</div><div class="lbl">GWP Maps</div></div>
+      <div class="stat"><div class="val">${S.staticFields.filter(r=>r.col).length}</div><div class="lbl">Static Fields</div></div>
+    </div>`;
+}
+
+// ──────────────── Run ──────────────────────────────────────────────────────────
+async function runProcess(){
+  const btn=document.getElementById('btn-run');
+  const st=document.getElementById('proc-status');
+  btn.disabled=true; btn.innerHTML='<div class="sp"></div> Processing — may take a minute for large files…';
+  st.innerHTML=`<div class="sb sb-info"><div class="sp"></div> Running transformation on ${S.inspectData?.max_row?.toLocaleString()||'?'} source rows — cells with ignored values are skipped individually per column…</div>`;
+  document.getElementById('result-section').style.display='none';
+
+  // Build config object
+  const meta_col_map={
+    imd_code:  {col_idx:+document.getElementById('mc-imd-code').value},
+    imd_name:  {col_idx:+document.getElementById('mc-imd-name').value},
+    rel_code:  {col_idx:+document.getElementById('mc-rel').value},
+    imd_type:  {col_idx:+document.getElementById('mc-imd-type').value},
+    vol_ll:    {col_idx:+document.getElementById('mc-vol-ll').value},
+    vol_ul:    {col_idx:+document.getElementById('mc-vol-ul').value},
+    vol_remark:{col_idx:+document.getElementById('mc-vol-rem').value},
+    uw_cluster:{col_idx:+document.getElementById('mc-cluster').value},
+  };
+  // Extra meta columns (month-specific optional columns)
+  const extra_meta_cols = S.extraMetaCols.filter(r=>r.label && r.col_idx>0);
+
+  const vol_gwp_map={};
+  S.vgRows.filter(r=>r.vol_rem).forEach(r=>{vol_gwp_map[r.vol_rem]={ll_col:r.ll_col,ul_col:r.ul_col};});
+
+  const agent_group_map={};
+  S.agentRows.filter(r=>r.imd_type).forEach(r=>{agent_group_map[r.imd_type]=r.code;});
+
+  const rto_norm_map={};
+  S.normRows.filter(r=>r.from).forEach(r=>{rto_norm_map[r.from.toUpperCase()]=r.to;});
+
+  const output_static={};
+  S.staticFields.filter(r=>r.col).forEach(r=>{output_static[r.col]=r.val;});
+  const column_defaults={};
+  S.colDefaults.filter(r=>r.col).forEach(r=>{column_defaults[r.col]=r.val;});
+
+  const col_defs=S.colCfg.filter(c=>c.enabled&&c.col_idx).map(c=>({
+    col_idx:c.col_idx, biz_mix_output:c.biz_mix_output,
+    rto_category:c.rto_category, extra_fields:c.extra_fields
+  }));
+
+  const ignore_values=document.getElementById('ignore-vals').value.split('\n').map(v=>v.trim()).filter(Boolean);
+  const skip_vol_biz=document.getElementById('skip-vol-biz').value.split(',').map(v=>v.trim()).filter(Boolean);
+
+  const config={
+    sheet_name:document.getElementById('cfg-sheet').value,
+    header_rows:[+document.getElementById('cfg-hr1').value,+document.getElementById('cfg-hr2').value,+document.getElementById('cfg-hr3').value],
+    data_start_row:+document.getElementById('cfg-dsr').value,
+    meta_col_map, col_defs, mode:S.mode, extra_meta_cols,
+    ignore_values, irda_values:ignore_values,
+    irda_prct_value:document.getElementById('irda-prct').value,
+    irda_outgo_value:document.getElementById('irda-outgo').value,
+    normal_outgo_value:document.getElementById('norm-outgo').value,
+    agent_group_map, vol_gwp_map,
+    std_gwp_ll_col:document.getElementById('std-ll').value,
+    std_gwp_ul_col:document.getElementById('std-ul').value,
+    prime_gwp_ll_col:document.getElementById('prime-ll').value,
+    prime_gwp_ul_col:document.getElementById('prime-ul').value,
+    agency_gwp_ll_col:document.getElementById('agency-ll').value,
+    agency_gwp_ul_col:document.getElementById('agency-ul').value,
+    keybrok_gwp_ll_col:document.getElementById('keybrok-ll').value,
+    keybrok_gwp_ul_col:document.getElementById('keybrok-ul').value,
+    imd_gwp_map: Object.fromEntries(
+      (S.imdGwpRows||[]).filter(r=>r.imd_type).map(r=>[r.imd_type, {ll_col:r.ll_col, ul_col:r.ul_col}])
+    ),
+    output_static_fields:output_static,
+            column_defaults:column_defaults,
+    rto_norm_map, skip_if_vol_biz:skip_vol_biz,
+    span_outgo_col:document.getElementById('out-span-outgo').value,
+    span_prct_col:document.getElementById('out-span-prct').value,
+    rto_code_col:document.getElementById('out-rto-code').value,
+    rto_cluster_col:document.getElementById('out-rto-clu').value,
+    parent_agent_col:document.getElementById('out-parent').value,
+    primary_agent_col:document.getElementById('out-primary').value,
+    agent_group_col:document.getElementById('out-ag-grp').value,
+    biz_mix_col:document.getElementById('out-biz-mix').value,
+  };
+
+  try{
+    const r=await fetch('api/process',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        filepath:S.filepath, rto_filepath:S.rtoPath,
+        session_id:S.sessionId,
+        output_name:document.getElementById('out-fn').value||'agency_output',
+        rto_sheet:document.getElementById('rto-sheet').value,
+        rto_header_row:+document.getElementById('rto-hr').value,
+        rto_col:document.getElementById('rto-col').value,
+        rto_cluster_col:document.getElementById('rto-clu-col').value,
+        rto_use_cat:document.getElementById('rto-use-cat').checked,
+        rto_cat_col:document.getElementById('rto-use-cat').checked ? document.getElementById('rto-cat-col').value : null,
+        col_transforms:S.colTransforms.filter(r=>r.col&&r.op&&r.value!==''),
+        output_format:S.outputFormat.filter(r=>r.col.trim()),
+        config
+      })});
+    const d=await r.json();
+    if(d.error) throw new Error(d.trace||d.error);
+    S.result=d;
+    st.innerHTML=`<div class="sb sb-ok">✓ Done! ${d.rows.toLocaleString()} output rows · ${d.skipped_rows.toLocaleString()} blank rows skipped · ${d.skipped_cells.toLocaleString()} empty/ignored cells skipped</div>`;
+    btn.innerHTML='▶ Run Agency Grid Processor'; btn.disabled=false;
+    document.getElementById('result-stats').innerHTML=`
+      <div class="stat"><div class="val" style="color:var(--ac)">${d.rows.toLocaleString()}</div><div class="lbl">Output Rows</div></div>
+      <div class="stat"><div class="val" style="color:var(--ac3)">${d.cols}</div><div class="lbl">Columns</div></div>
+      <div class="stat"><div class="val" style="color:var(--t2)">${d.skipped_rows.toLocaleString()}</div><div class="lbl">Blank Rows Skipped</div></div>
+      <div class="stat"><div class="val" style="color:var(--t3)">${d.skipped_cells.toLocaleString()}</div><div class="lbl">Cells Skipped</div></div>`;
+    if(d.preview?.length){
+      const cols=d.columns||Object.keys(d.preview[0]); const show=cols.slice(0,10);
+      document.getElementById('result-preview').innerHTML=`<table>
+        <thead><tr>${show.map(c=>`<th>${esc(c)}</th>`).join('')}${cols.length>10?`<th style="color:var(--t3)">+${cols.length-10} more</th>`:''}</tr></thead>
+        <tbody>${d.preview.map(row=>`<tr>${show.map(c=>`<td title="${esc(row[c]||'')}">${esc(row[c]||'')}</td>`).join('')}${cols.length>10?'<td>…</td>':''}</tr>`).join('')}</tbody>
+      </table>`;
+    }
+    document.getElementById('result-section').style.display='block';
+    markDone(7);
+  }catch(e){
+    st.innerHTML=`<div class="sb sb-err">❌ ${esc(e.message)}</div>`;
+    btn.disabled=false; btn.innerHTML='▶ Run Agency Grid Processor';
+  }
+}
+
+function dlResult(){if(S.result) window.location.href=`api/download/${S.result.output_filename}`;}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ──────────────── Export / Import Config ───────────────────────────────────────
+function exportConfig(){
+  const cfg = {
+    _version: 1,
+    _exported: new Date().toISOString(),
+    mode: S.mode,
+    // Step 2 — Sheet & Headers
+    sheet_name:     document.getElementById('cfg-sheet').value,
+    header_row1:    document.getElementById('cfg-hr1').value,
+    header_row2:    document.getElementById('cfg-hr2').value,
+    header_row3:    document.getElementById('cfg-hr3').value,
+    data_start_row: document.getElementById('cfg-dsr').value,
+    rate_cols_start:document.getElementById('cfg-sc').value,
+    // Meta column positions
+    mc_imd_code: document.getElementById('mc-imd-code').value,
+    mc_imd_name: document.getElementById('mc-imd-name').value,
+    mc_rel:      document.getElementById('mc-rel').value,
+    mc_imd_type: document.getElementById('mc-imd-type').value,
+    mc_vol_ll:   document.getElementById('mc-vol-ll').value,
+    mc_vol_ul:   document.getElementById('mc-vol-ul').value,
+    mc_vol_rem:  document.getElementById('mc-vol-rem').value,
+    mc_cluster:  document.getElementById('mc-cluster').value,
+    // Extra meta columns (month-specific)
+    extraMetaCols: S.extraMetaCols,
+    // Value logic
+    ignore_values: document.getElementById('ignore-vals').value,
+    irda_outgo:    document.getElementById('irda-outgo').value,
+    irda_prct:     document.getElementById('irda-prct').value,
+    norm_outgo:    document.getElementById('norm-outgo').value,
+    skip_vol_biz:  document.getElementById('skip-vol-biz').value,
+    // Step 3 — Column config (full S state)
+    colCfg: S.colCfg,
+    // Step 4 — GWP & Agent map
+    vgRows:     S.vgRows,
+    agentRows:  S.agentRows,
+    imdGwpRows: S.imdGwpRows,
+    std_ll:     document.getElementById('std-ll').value,
+    std_ul:     document.getElementById('std-ul').value,
+    prime_ll:   document.getElementById('prime-ll').value,
+    prime_ul:   document.getElementById('prime-ul').value,
+    agency_ll:  document.getElementById('agency-ll').value,
+    agency_ul:  document.getElementById('agency-ul').value,
+    keybrok_ll: document.getElementById('keybrok-ll').value,
+    keybrok_ul: document.getElementById('keybrok-ul').value,
+    // Step 5 — RTO config
+    rto_sheet:   document.getElementById('rto-sheet').value,
+    rto_hr:      document.getElementById('rto-hr').value,
+    rto_col:     document.getElementById('rto-col').value,
+    rto_clu_col: document.getElementById('rto-clu-col').value,
+    rto_use_cat: document.getElementById('rto-use-cat').checked,
+    rto_cat_col: document.getElementById('rto-cat-col').value,
+    normRows:    S.normRows,
+    // Step 6 — Output settings
+    out_fn:         document.getElementById('out-fn').value,
+    out_span_outgo: document.getElementById('out-span-outgo').value,
+    out_span_prct:  document.getElementById('out-span-prct').value,
+    out_rto_code:   document.getElementById('out-rto-code').value,
+    out_rto_clu:    document.getElementById('out-rto-clu').value,
+    out_parent:     document.getElementById('out-parent').value,
+    out_primary:    document.getElementById('out-primary').value,
+    out_ag_grp:     document.getElementById('out-ag-grp').value,
+    out_biz_mix:    document.getElementById('out-biz-mix').value,
+    staticFields:   S.staticFields,
+    colDefaults:    S.colDefaults,
+    colTransforms:  S.colTransforms,
+    outputFormat:   S.outputFormat,
+  };
+
+  const blob = new Blob([JSON.stringify(cfg, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `agency_grid_config_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+
+  const st = document.getElementById('cfg-import-status');
+  st.style.cssText = 'display:block;color:var(--ac3)';
+  st.textContent = '✓ Config exported!';
+  setTimeout(()=>{ st.style.display='none'; }, 3000);
+}
+
+function importConfig(input){
+  const file = input.files[0]; if(!file) return;
+  const st = document.getElementById('cfg-import-status');
+  st.style.cssText = 'display:block;color:var(--t2)';
+  st.textContent = '⏳ Loading config…';
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const cfg = JSON.parse(e.target.result);
+      if(!cfg._version) throw new Error('Not a valid Agency Grid config file.');
+
+      const set = (id, val) => { const el=document.getElementById(id); if(el && val!=null) el.value=val; };
+
+      if(cfg.mode) setMode(cfg.mode);
+
+      // Step 2
+      set('cfg-hr1', cfg.header_row1); set('cfg-hr2', cfg.header_row2);
+      set('cfg-hr3', cfg.header_row3); set('cfg-dsr', cfg.data_start_row);
+      set('cfg-sc',  cfg.rate_cols_start);
+      // Meta columns
+      set('mc-imd-code', cfg.mc_imd_code); set('mc-imd-name', cfg.mc_imd_name);
+      set('mc-rel',      cfg.mc_rel);      set('mc-imd-type',  cfg.mc_imd_type);
+      set('mc-vol-ll',   cfg.mc_vol_ll);   set('mc-vol-ul',    cfg.mc_vol_ul);
+      set('mc-vol-rem',  cfg.mc_vol_rem);  set('mc-cluster',   cfg.mc_cluster);
+      // Value logic
+      set('ignore-vals', cfg.ignore_values); set('irda-outgo',   cfg.irda_outgo);
+      set('irda-prct',   cfg.irda_prct);     set('norm-outgo',   cfg.norm_outgo);
+      set('skip-vol-biz',cfg.skip_vol_biz);
+      // Extra meta columns
+      if(Array.isArray(cfg.extraMetaCols)){ S.extraMetaCols=cfg.extraMetaCols; renderExtraMetaRows && renderExtraMetaRows(); }
+      // Column config
+      if(Array.isArray(cfg.colCfg)){ S.colCfg=cfg.colCfg; renderColTable && renderColTable(); }
+      // GWP & Agent
+      if(Array.isArray(cfg.vgRows)){    S.vgRows=cfg.vgRows;       renderVgRows    && renderVgRows(); }
+      if(Array.isArray(cfg.agentRows)){ S.agentRows=cfg.agentRows; renderAgentRows && renderAgentRows(); }
+      if(Array.isArray(cfg.imdGwpRows)){ S.imdGwpRows=cfg.imdGwpRows; renderImdGwpRows && renderImdGwpRows(); }
+      set('std-ll', cfg.std_ll); set('std-ul', cfg.std_ul);
+      set('prime-ll', cfg.prime_ll); set('prime-ul', cfg.prime_ul);
+      set('agency-ll', cfg.agency_ll); set('agency-ul', cfg.agency_ul);
+      set('keybrok-ll', cfg.keybrok_ll); set('keybrok-ul', cfg.keybrok_ul);
+      // RTO config
+      set('rto-sheet', cfg.rto_sheet); set('rto-hr',      cfg.rto_hr);
+      set('rto-col',   cfg.rto_col);   set('rto-clu-col', cfg.rto_clu_col);
+      set('rto-cat-col', cfg.rto_cat_col);
+      if(cfg.rto_use_cat != null){
+        document.getElementById('rto-use-cat').checked = cfg.rto_use_cat;
+        toggleRtoCatCol();
+      }
+      if(Array.isArray(cfg.normRows)){ S.normRows=cfg.normRows; renderNormRows && renderNormRows(); }
+      // Output settings
+      set('out-fn', cfg.out_fn); set('out-span-outgo', cfg.out_span_outgo);
+      set('out-span-prct', cfg.out_span_prct); set('out-rto-code', cfg.out_rto_code);
+      set('out-rto-clu', cfg.out_rto_clu); set('out-parent', cfg.out_parent);
+      set('out-primary', cfg.out_primary); set('out-ag-grp', cfg.out_ag_grp);
+      set('out-biz-mix', cfg.out_biz_mix);
+      if(Array.isArray(cfg.staticFields)){ S.staticFields=cfg.staticFields; renderStaticFields && renderStaticFields(); }
+      if(Array.isArray(cfg.colDefaults)){  S.colDefaults=cfg.colDefaults;   renderColDefaults  && renderColDefaults(); }
+      if(Array.isArray(cfg.colTransforms)){S.colTransforms=cfg.colTransforms;renderTransforms   && renderTransforms(); }
+      if(Array.isArray(cfg.outputFormat)){ S.outputFormat=cfg.outputFormat; renderOutputFormat && renderOutputFormat(); }
+
+      // Store sheet name — applied after file upload when the sheet dropdown is populated
+      if(cfg.sheet_name) S._pendingSheetName = cfg.sheet_name;
+
+      st.style.color = 'var(--ac3)';
+      st.textContent = `✓ Config imported from "${file.name}" — now upload your Excel file and continue`;
+      setTimeout(()=>{ st.style.display='none'; }, 6000);
+    }catch(err){
+      st.style.color = 'var(--ac2)';
+      st.textContent = `❌ Import failed: ${err.message}`;
+    }
+    input.value = ''; // allow re-import of same file
+  };
+  reader.readAsText(file);
+}
+
+// ──────────────── Init ─────────────────────────────────────────────────────────
+setMode('special');
+initNormRows();
+initStaticFields();
+initColDefaults();
+initTransforms();
+initOutputFormat();
+renderAgentRows();
+renderVgRows();
+buildImdGwpRowsFromInspect([]);
+
+
+// ──────────────── Merger Column Sequencer ─────────────────────────────────────
+
+const MERGE_DEFAULT_COL_ORDER = ['version_id', 'parent_agent_code', 'agent_group_code', 'biz_mix', 'two_wheeler_category', 'type_of_business', 'cpan_prct', 'rto_cluster', 'rto_code', 'gross_vehicle_weight_ll', 'gross_vehicle_weight_ul', 'cubic_capacity_ll', 'cubic_capacity_ul', 'cpan_outgo', 'total_gwp_ll', 'total_gwp_ul', 'totalgwp_keybrok_agency_ll', 'totalgwp_keybrok_agency_ul', 'totalgwp_pvt_car_ll', 'totalgwp_pvt_car_ul', 'totalgwp_pvtcar1plus1_ll', 'totalgwp_pvtcar1plus1_ul', 'body_type', 'fuel_type', 'ncb_ll', 'ncb_ul', 'vehicle_age_ll', 'vehicle_age_ul', 'bus_type', 'totalgwp_satp_ll', 'totalgwp_satp_ul', 'totalgwp_tractor_ll', 'totalgwp_tractor_ul'];
+let mergeColOrder = [...MERGE_DEFAULT_COL_ORDER];
+let _seqDragIdx = null;
+
+function renderMergeColSeq() {
+  const grid = document.getElementById('mg-col-seq');
+  if (!grid) return;
+  grid.innerHTML = mergeColOrder.map((col, i) => `
+    <div class="col-pill" draggable="true"
+      data-idx="${i}"
+      ondragstart="seqDragStart(event,${i})"
+      ondragover="seqDragOver(event,${i})"
+      ondragleave="seqDragLeave(event,${i})"
+      ondrop="seqDrop(event,${i})"
+      ondragend="seqDragEnd()">
+      <span class="drag-handle">⠿</span>
+      <span>${esc(col)}</span>
+    </div>`).join('');
+}
+
+function seqDragStart(e, idx) {
+  _seqDragIdx = idx;
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function seqDragOver(e, idx) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.col-pill').forEach(p => p.classList.remove('drag-over'));
+  const pill = document.querySelector(`.col-pill[data-idx="${idx}"]`);
+  if (pill && idx !== _seqDragIdx) pill.classList.add('drag-over');
+}
+function seqDragLeave(e, idx) {
+  const pill = document.querySelector(`.col-pill[data-idx="${idx}"]`);
+  if (pill) pill.classList.remove('drag-over');
+}
+function seqDrop(e, toIdx) {
+  e.preventDefault();
+  if (_seqDragIdx === null || _seqDragIdx === toIdx) return;
+  const moved = mergeColOrder.splice(_seqDragIdx, 1)[0];
+  mergeColOrder.splice(toIdx, 0, moved);
+  _seqDragIdx = null;
+  renderMergeColSeq();
+}
+function seqDragEnd() {
+  _seqDragIdx = null;
+  document.querySelectorAll('.col-pill').forEach(p => {
+    p.classList.remove('dragging');
+    p.classList.remove('drag-over');
+  });
+}
+
+function resetMergeColOrder() {
+  mergeColOrder = [...MERGE_DEFAULT_COL_ORDER];
+  renderMergeColSeq();
+}
+
+// Initialise on load
+document.addEventListener('DOMContentLoaded', renderMergeColSeq);
+
+// ──────────────── CSV Merger ────────────────────────────────────────────────
+
+const GWP_OPTIONS = {
+  'total_gwp':               {label:'Total GWP Ll* / Ul*',               ll:'total_gwp_ll',               ul:'total_gwp_ul'},
+  'totalgwp_keybrok_agency': {label:'Totalgwp Keybrok Agency Ll* / Ul*', ll:'totalgwp_keybrok_agency_ll', ul:'totalgwp_keybrok_agency_ul'},
+  'totalgwp_pvt_car':        {label:'Totalgwp Pvt Car Ll* / Ul*',        ll:'totalgwp_pvt_car_ll',        ul:'totalgwp_pvt_car_ul'},
+  'totalgwp_pvtcar1plus1':   {label:'Totalgwp Pvtcar1plus1 Ll* / Ul*',  ll:'totalgwp_pvtcar1plus1_ll',   ul:'totalgwp_pvtcar1plus1_ul'},
+  'totalgwp_satp':           {label:'Totalgwp Satp Ll* / Ul*',           ll:'totalgwp_satp_ll',           ul:'totalgwp_satp_ul'},
+  'totalgwp_tractor':        {label:'Totalgwp Tractor Ll* / Ul*',        ll:'totalgwp_tractor_ll',        ul:'totalgwp_tractor_ul'},
+};
+
+// mergeFiles: [{file: File, gwp_target: string}]
+let mergeFiles = [];
+
+function gwpSelectOptions(selected){
+  return Object.entries(GWP_OPTIONS).map(([k,v])=>
+    `<option value="${k}" ${selected===k?'selected':''}>${v.label}</option>`
+  ).join('');
+}
+
+function handleMergeFiles(fileList){
+  for(const f of fileList){
+    if(f && !mergeFiles.find(x=>x.file.name===f.name)){
+      // Auto-guess GWP target from filename
+      const name = f.name.toLowerCase();
+      let gwp = 'total_gwp';
+      if(name.includes('pvt_car') || name.includes('pvtcar') || name.includes('pvt-car')){
+        // Check for 1+1 variant first
+        if(name.includes('1plus1') || name.includes('1+1') || name.includes('1_1'))
+          gwp = 'totalgwp_pvtcar1plus1';
+        else
+          gwp = 'totalgwp_pvt_car';
+      } else if(name.includes('keybrok') || name.includes('key_brok') || name.includes('agency') || name.includes('agent')){
+        gwp = 'totalgwp_keybrok_agency';
+      } else if(name.includes('satp')){
+        gwp = 'totalgwp_satp';
+      } else if(name.includes('tractor')){
+        gwp = 'totalgwp_tractor';
+      }
+      mergeFiles.push({file: f, gwp_target: gwp});
+    }
+  }
+  renderMergeFileTable();
+}
+function handleMergeFilesFromDrop(fileList){ handleMergeFiles(fileList); }
+
+function renderMergeFileTable(){
+  const card = document.getElementById('mg-file-card');
+  const tbody = document.getElementById('mg-file-tbody');
+  const badge = document.getElementById('mg-file-count-badge');
+
+  if(!mergeFiles.length){
+    card.style.display = 'none';
+    document.getElementById('uz-merge').classList.remove('has-file');
+    return;
+  }
+
+  card.style.display = 'block';
+  document.getElementById('uz-merge').classList.add('has-file');
+  badge.textContent = mergeFiles.length + ' file' + (mergeFiles.length>1?'s':'');
+
+  tbody.innerHTML = mergeFiles.map((entry, i) => {
+    const {ll, ul} = GWP_OPTIONS[entry.gwp_target] || GWP_OPTIONS['total_gwp'];
+    return `<tr>
+      <td style="padding:8px 10px;border-bottom:1px solid var(--b1)">
+        <span style="font-family:var(--mo);font-size:11px;color:var(--ac3)">${esc(entry.file.name)}</span>
+        <span style="color:var(--t3);font-size:10px;margin-left:6px">${(entry.file.size/1024).toFixed(1)} KB</span>
+      </td>
+      <td style="padding:6px 10px;border-bottom:1px solid var(--b1)">
+        <select style="width:100%;background:var(--bg);border:1px solid var(--b2);border-radius:5px;padding:5px 8px;color:var(--tx);font-size:12px"
+          onchange="mergeFiles[${i}].gwp_target=this.value;renderMergeFileTable()">
+          ${gwpSelectOptions(entry.gwp_target)}
+        </select>
+      </td>
+      <td style="padding:8px 10px;border-bottom:1px solid var(--b1);font-family:var(--mo);font-size:10px;color:var(--t2);line-height:1.8">
+        <span style="color:var(--t3)">LL→</span> <span style="color:var(--ac)">${esc(ll)}</span><br/>
+        <span style="color:var(--t3)">UL→</span> <span style="color:var(--ac)">${esc(ul)}</span>
+      </td>
+      <td style="padding:6px 10px;border-bottom:1px solid var(--b1);text-align:center">
+        <button class="btn btn-xs btn-re" onclick="mergeFiles.splice(${i},1);renderMergeFileTable()">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadOutputsList(){
+  try{
+    const r = await fetch('api/list_outputs');
+    const d = await r.json();
+    const sel = document.getElementById('mg-append-sel');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Create new file (don\'t append) —</option>' +
+      (d.files||[]).map(f=>`<option value="${esc(f)}" ${f===cur?'selected':''}>${esc(f)}</option>`).join('');
+  }catch(e){ console.warn('Could not load outputs list', e); }
+}
+
+async function runMerge(){
+  const statusEl = document.getElementById('mg-status');
+  const btn = document.getElementById('btn-merge');
+
+  if(!mergeFiles.length){
+    statusEl.innerHTML = '<div class="sb sb-err">❌ Please add at least one CSV file.</div>'; return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="sp"></div> Processing…';
+  statusEl.innerHTML = `<div class="sb sb-info"><div class="sp"></div> Mapping and merging ${mergeFiles.length} file(s)…</div>`;
+  document.getElementById('mg-result-section').style.display = 'none';
+
+  const fd = new FormData();
+  mergeFiles.forEach((entry, i) => {
+    fd.append('csv_files[]', entry.file);
+    fd.append('gwp_targets[]', entry.gwp_target);
+  });
+  fd.append('output_name', document.getElementById('mg-out-name').value || 'merged_output');
+  fd.append('append_filename', document.getElementById('mg-append-sel').value || '');
+  mergeColOrder.forEach(col => fd.append('col_order[]', col));
+
+  try{
+    const r = await fetch('api/merge_csv', {method:'POST', body:fd});
+    const d = await r.json();
+    if(d.error) throw new Error(d.trace || d.error);
+
+    S._mergeResult = d;
+    statusEl.innerHTML = `<div class="sb sb-ok">✓ Merged successfully — ${d.total_rows.toLocaleString()} total rows in output.</div>`;
+
+    document.getElementById('mg-result-stats').innerHTML = `
+      <div class="stat"><div class="val" style="color:var(--ac)">${d.total_rows.toLocaleString()}</div><div class="lbl">Total Rows</div></div>
+      <div class="stat"><div class="val" style="color:var(--ac3)">${(d.files||[]).length}</div><div class="lbl">Files Merged</div></div>
+      <div class="stat"><div class="val" style="color:var(--ac4)">${d.columns?.length||0}</div><div class="lbl">Columns</div></div>
+      <div class="stat"><div class="val" style="color:var(--t2);font-size:13px">${esc(d.output_filename)}</div><div class="lbl">Output File</div></div>`;
+
+    document.getElementById('mg-file-summary').innerHTML =
+      (d.files||[]).map(f=>`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+          <span class="chip ${f.error?'chip-re':'chip-gr'}">${f.error?'ERR':'OK'}</span>
+          <span style="font-family:var(--mo);font-size:11px;flex:1;min-width:180px">${esc(f.filename)}</span>
+          <span class="chip chip-am" style="font-size:9px">${esc(GWP_OPTIONS[f.gwp_target]?.label||f.gwp_target)}</span>
+          <span style="color:var(--t2);font-size:11px">${f.error ? esc(f.error) : f.rows.toLocaleString()+' rows'}</span>
+        </div>`).join('');
+
+    if(d.preview?.length){
+      const cols = (d.columns||Object.keys(d.preview[0])).slice(0,8);
+      document.getElementById('mg-result-preview').innerHTML = `<table>
+        <thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}${d.columns?.length>8?`<th style="color:var(--t3)">+${d.columns.length-8} more</th>`:''}</tr></thead>
+        <tbody>${d.preview.map(row=>`<tr>${cols.map(c=>`<td title="${esc(row[c]||'')}">${esc(row[c]||'')}</td>`).join('')}${d.columns?.length>8?'<td>…</td>':''}</tr>`).join('')}</tbody>
+      </table>`;
+    }
+
+    document.getElementById('mg-result-section').style.display = 'block';
+  }catch(e){
+    statusEl.innerHTML = `<div class="sb sb-err">❌ ${esc(e.message)}</div>`;
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = '⇌ Run Merger';
+  }
+}
+
+function dlMergeResult(){
+  if(S._mergeResult) window.location.href = `api/download/${S._mergeResult.output_filename}`;
+}
+</script>
+</body>
+</html>

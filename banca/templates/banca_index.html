@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Grid Processor Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#080b12;--s1:#0e1220;--s2:#141928;--s3:#1c2235;
+  --b1:#1e2540;--b2:#252d47;--b3:#2e3a58;
+  --ac:#4f8ef7;--ac2:#7b5cf7;--ac3:#f74f8e;
+  --gr:#2dd4a0;--ye:#f7c94f;--re:#f74f4f;--or:#f7924f;
+  --tx:#dde4f5;--t2:#8b96b8;--t3:#4a5470;--t4:#2a3050;
+  --fn:'Outfit',sans-serif;--mo:'JetBrains Mono',monospace;
+  --r:10px;--r2:14px;--r3:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--fn);font-size:14px;}
+
+/* ── Layout ── */
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+.sidebar{background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.main-area{overflow-x:hidden;}
+
+/* ── Mode bar ── */
+.mode-bar{background:var(--s2);border-bottom:1px solid var(--b1);padding:12px 20px;display:flex;gap:8px;align-items:center;}
+.mode-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--b2);background:transparent;color:var(--t2);transition:all .15s;font-family:var(--fn);}
+.mode-btn.active{background:rgba(79,142,247,.12);border-color:var(--ac);color:var(--ac);}
+.mode-btn.sk.active{background:rgba(247,79,142,.1);border-color:var(--ac3);color:var(--ac3);}
+.mode-icon{font-size:16px;}
+
+/* ── Sidebar ── */
+.logo{padding:20px 18px 18px;border-bottom:1px solid var(--b1);}
+.logo-mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--ac),var(--ac2));display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:10px;}
+.logo h1{font-size:14px;font-weight:700;letter-spacing:.02em;}
+.logo p{font-size:11px;color:var(--t3);font-family:var(--mo);margin-top:2px;}
+
+.nav{padding:14px 10px;flex:1;}
+.nav-sec-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);padding:8px 8px 4px;font-family:var(--mo);}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--t2);transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:var(--fn);}
+.nav-item:hover{background:var(--s3);color:var(--tx);}
+.nav-item.active{background:rgba(79,142,247,.1);color:var(--ac);}
+.nav-item.sk-active{background:rgba(247,79,142,.08);color:var(--ac3);}
+.step-badge{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--b3);display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--mo);flex-shrink:0;}
+.nav-item.active .step-badge{border-color:var(--ac);color:var(--ac);background:rgba(79,142,247,.12);}
+.nav-item.sk-active .step-badge{border-color:var(--ac3);color:var(--ac3);background:rgba(247,79,142,.1);}
+.nav-item.done .step-badge{background:var(--gr);border-color:var(--gr);color:#080b12;}
+
+.sidebar-foot{padding:14px 14px 20px;margin-top:auto;}
+.marker-pill{display:inline-block;padding:3px 9px;border-radius:5px;font-family:var(--mo);font-size:10px;margin:2px 2px 2px 0;}
+.mp-blue{background:rgba(79,142,247,.15);color:var(--ac);}
+.mp-gr{background:rgba(45,212,160,.12);color:var(--gr);}
+.mp-ye{background:rgba(247,201,79,.12);color:var(--ye);}
+.mp-re{background:rgba(247,79,79,.12);color:var(--re);}
+.mp-or{background:rgba(247,146,79,.12);color:var(--or);}
+
+/* ── Panel system ── */
+.portal-panel{display:none;padding:32px 36px;max-width:1080px;}
+.portal-panel.active{display:block;}
+
+/* ── Page heading ── */
+.ph{margin-bottom:28px;}
+.ph h2{font-size:24px;font-weight:700;}
+.ph p{color:var(--t2);margin-top:5px;line-height:1.5;}
+.ph .ph-tag{display:inline-block;padding:3px 10px;border-radius:5px;font-size:11px;font-family:var(--mo);margin-left:10px;background:rgba(247,79,142,.1);color:var(--ac3);vertical-align:middle;}
+
+/* ── Cards ── */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:22px;margin-bottom:18px;}
+.card-title{font-size:14px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.badge{padding:2px 8px;border-radius:4px;font-size:10px;font-family:var(--mo);}
+.badge-blue{background:rgba(79,142,247,.15);color:var(--ac);}
+.badge-gr{background:rgba(45,212,160,.12);color:var(--gr);}
+.badge-ye{background:rgba(247,201,79,.12);color:var(--ye);}
+.badge-or{background:rgba(247,146,79,.12);color:var(--or);}
+
+/* ── Upload ── */
+.upload-zone{border:2px dashed var(--b3);border-radius:var(--r2);padding:36px 20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--ac);background:rgba(79,142,247,.04);}
+.upload-zone.has-file{border-color:var(--gr);background:rgba(45,212,160,.03);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;}
+.upload-icon{font-size:30px;margin-bottom:10px;}
+.upload-zone h3{font-size:15px;font-weight:600;margin-bottom:4px;}
+.upload-zone p{color:var(--t2);font-size:12px;}
+.file-chip{display:inline-flex;align-items:center;gap:7px;background:var(--s3);border:1px solid var(--b2);padding:6px 12px;border-radius:7px;font-family:var(--mo);font-size:11px;margin-top:10px;}
+
+/* ── Forms ── */
+.fg{margin-bottom:14px;}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.fr4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;}
+label{display:block;font-size:11px;font-family:var(--mo);color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em;}
+input[type=text],input[type=number],select,textarea{
+  width:100%;background:var(--s3);border:1px solid var(--b2);border-radius:8px;
+  padding:9px 13px;color:var(--tx);font-family:var(--fn);font-size:13px;outline:none;transition:border .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--ac);}
+textarea{resize:vertical;min-height:110px;font-family:var(--mo);font-size:12px;line-height:1.65;}
+select option{background:var(--s2);}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);cursor:pointer;}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:var(--fn);}
+.btn-primary{background:var(--ac);color:#fff;}
+.btn-primary:hover{background:#3d7ef5;}
+.btn-primary:disabled{background:var(--b2);color:var(--t3);cursor:not-allowed;}
+.btn-sec{background:var(--s3);border:1px solid var(--b2);color:var(--tx);}
+.btn-sec:hover{border-color:var(--ac);color:var(--ac);}
+.btn-gr{background:var(--gr);color:#080b12;font-weight:600;}
+.btn-gr:hover{background:#22c08a;}
+.btn-pk{background:rgba(247,79,142,.15);border:1px solid var(--ac3);color:var(--ac3);}
+.btn-pk:hover{background:rgba(247,79,142,.25);}
+.btn-ye{background:rgba(247,201,79,.15);border:1px solid var(--ye);color:var(--ye);}
+.btn-lg{padding:11px 24px;font-size:14px;}
+.btn-sm{padding:5px 12px;font-size:11px;}
+.btn-xs{padding:3px 9px;font-size:10px;border-radius:5px;}
+
+/* ── Presets ── */
+.preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:18px;}
+.preset-card{background:var(--s3);border:1.5px solid var(--b2);border-radius:var(--r);padding:13px;cursor:pointer;transition:all .15s;}
+.preset-card:hover{border-color:var(--ac);}
+.preset-card.sel{border-color:var(--ac);background:rgba(79,142,247,.07);}
+.preset-card h4{font-size:12px;font-weight:600;margin-bottom:3px;}
+.preset-card p{font-size:10px;color:var(--t3);font-family:var(--mo);}
+
+/* ── Status bars ── */
+.sb{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--r);font-size:13px;margin-bottom:14px;}
+.sb-info{background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);color:var(--ac);}
+.sb-ok{background:rgba(45,212,160,.08);border:1px solid rgba(45,212,160,.2);color:var(--gr);}
+.sb-err{background:rgba(247,79,79,.08);border:1px solid rgba(247,79,79,.2);color:var(--re);}
+.sb-warn{background:rgba(247,201,79,.08);border:1px solid rgba(247,201,79,.2);color:var(--ye);}
+.sp{width:15px;height:15px;border:2px solid rgba(79,142,247,.25);border-top-color:var(--ac);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Tables ── */
+.tw{overflow-x:auto;border-radius:var(--r);border:1px solid var(--b1);}
+table{width:100%;border-collapse:collapse;font-size:11.5px;font-family:var(--mo);}
+thead{background:var(--s3);}
+th{padding:9px 12px;text-align:left;color:var(--t2);font-weight:500;border-bottom:1px solid var(--b1);white-space:nowrap;}
+td{padding:8px 12px;border-bottom:1px solid var(--b1);color:var(--tx);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+
+/* ── Stats ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.stat{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:14px 18px;}
+.stat .val{font-size:26px;font-weight:700;font-family:var(--fn);}
+.stat .lbl{font-size:10px;color:var(--t3);font-family:var(--mo);margin-top:3px;}
+
+/* ── Transformation builder ── */
+.tx-rule{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r2);padding:16px;margin-bottom:10px;position:relative;}
+.tx-rule .tx-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.tx-rule .col-sel{flex:1;min-width:180px;}
+.tx-ops{display:flex;flex-direction:column;gap:8px;}
+.tx-op{display:flex;align-items:flex-start;gap:8px;background:var(--s3);border:1px solid var(--b1);border-radius:8px;padding:10px 12px;}
+.tx-op-type{min-width:140px;}
+.tx-op-params{flex:1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.cond-rule-block{background:var(--bg);border:1px solid var(--b2);border-radius:8px;padding:12px;margin-top:8px;}
+.cond-then-row{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;}
+.del-btn{background:none;border:none;color:var(--t3);cursor:pointer;padding:4px 6px;border-radius:4px;font-size:13px;flex-shrink:0;}
+.del-btn:hover{color:var(--re);background:rgba(247,79,79,.08);}
+.add-op-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+
+/* ── SK Finance snapshot ── */
+.snapshot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:2px;font-family:var(--mo);font-size:10px;}
+.snap-cell{background:var(--s3);border:1px solid var(--b1);padding:5px 7px;border-radius:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2);}
+.snap-cell.highlight{background:rgba(79,142,247,.12);color:var(--ac);border-color:rgba(79,142,247,.3);}
+
+/* ── Source key chips ── */
+.sk-key{display:inline-block;padding:3px 9px;border-radius:5px;font-family:var(--mo);font-size:10px;background:rgba(247,79,142,.1);color:var(--ac3);border:1px solid rgba(247,79,142,.2);cursor:pointer;margin:2px;}
+.sk-key:hover{background:rgba(247,79,142,.2);}
+.src-chip{font-family:var(--mo);font-size:10px;padding:3px 9px;background:var(--s3);border:1px solid var(--b2);border-radius:5px;cursor:pointer;color:var(--t2);}
+.src-chip:hover{border-color:var(--ac);color:var(--ac);}
+
+/* ── Misc ── */
+.divider{border:none;border-top:1px solid var(--b1);margin:20px 0;}
+.hint{font-size:11px;color:var(--t3);margin-top:4px;font-family:var(--mo);line-height:1.5;}
+.json-err{font-size:11px;color:var(--re);margin-top:4px;font-family:var(--mo);}
+.action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+.special-toolbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px;align-items:center;}
+.sp-btn{font-family:var(--mo);font-size:10px;padding:4px 9px;border-radius:5px;background:var(--s3);border:1px solid var(--b2);color:var(--t2);cursor:pointer;}
+.sp-btn:hover{border-color:var(--ac);color:var(--ac);}
+.col-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--s1)}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+.fade{animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.sk-cell-config{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* ── Visual Mapper ── */
+.mapper-row{display:grid;grid-template-columns:210px 1fr auto;gap:8px;align-items:center;padding:7px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;transition:border-color .15s;}
+.mapper-row:hover{border-color:var(--b3);}
+.mapper-row.mapped{border-left:3px solid var(--gr);}
+.mapper-row.unmapped{border-left:3px solid var(--b2);}
+.mapper-row.hidden-row{display:none;}
+.mapper-target{font-family:var(--mo);font-size:11px;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mapper-value-area{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.mapper-type-toggle{display:flex;border:1px solid var(--b2);border-radius:6px;overflow:hidden;flex-shrink:0;}
+.mapper-type-btn{padding:4px 9px;font-size:10px;font-family:var(--mo);cursor:pointer;background:transparent;border:none;color:var(--t2);transition:all .12s;}
+.mapper-type-btn.active{background:var(--ac);color:#fff;}
+.mapper-type-btn.active-lit{background:var(--re);color:#fff;}
+.mapper-type-btn.active-special{background:var(--ac2);color:#fff;}
+.mapper-col-select{flex:1;min-width:140px;max-width:260px;padding:5px 9px;font-size:12px;}
+.mapper-literal-input{flex:1;min-width:140px;padding:5px 9px;font-size:12px;}
+.mapper-special-btns{display:flex;gap:4px;flex-wrap:wrap;}
+.mapper-special-btn{padding:3px 8px;font-size:10px;font-family:var(--mo);border-radius:4px;cursor:pointer;border:1px solid var(--b2);background:var(--s3);color:var(--t2);white-space:nowrap;}
+.mapper-special-btn:hover,.mapper-special-btn.sel{border-color:var(--ac2);color:var(--ac2);background:rgba(123,92,247,.1);}
+.mapper-special-btn.sel-dt{border-color:var(--ye);color:var(--ye);background:rgba(247,201,79,.1);}
+.mapper-special-btn.sel-rto{border-color:var(--gr);color:var(--gr);background:rgba(45,212,160,.1);}
+.mapper-special-btn.sel-uid{border-color:var(--ac);color:var(--ac);background:rgba(79,142,247,.1);}
+.mapper-clear-btn{padding:3px 7px;background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;flex-shrink:0;border-radius:4px;}
+.mapper-clear-btn:hover{color:var(--re);background:rgba(247,79,79,.08);}
+
+/* ── Responsive ── */
+@media(max-width:860px){
+  .app{grid-template-columns:1fr}.sidebar{display:none}
+  .portal-panel{padding:18px 16px}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .preset-grid,.fr3,.fr4{grid-template-columns:1fr 1fr}
+  .fr{grid-template-columns:1fr}
+}
+
+/* ── AI Assistant ── */
+.ai-fab{position:fixed;right:24px;bottom:24px;width:54px;height:54px;border-radius:50%;
+  background:linear-gradient(135deg,var(--ac),var(--ac2));border:none;cursor:pointer;z-index:500;
+  display:flex;align-items:center;justify-content:center;font-size:23px;box-shadow:0 6px 22px rgba(79,142,247,.4);
+  transition:transform .15s;}
+.ai-fab:hover{transform:scale(1.06);}
+.ai-fab .ai-dot{position:absolute;top:2px;right:2px;width:11px;height:11px;border-radius:50%;background:var(--gr);border:2px solid var(--bg);}
+.ai-panel{position:fixed;right:24px;bottom:90px;width:380px;max-height:min(620px,75vh);background:var(--s1);
+  border:1px solid var(--b1);border-radius:var(--r3);box-shadow:0 20px 60px rgba(0,0,0,.5);z-index:499;
+  display:none;flex-direction:column;overflow:hidden;}
+.ai-panel.open{display:flex;}
+.ai-head{padding:14px 16px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:10px;background:var(--s2);}
+.ai-head .ai-avatar{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--ac),var(--ac2));
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.ai-head-txt{flex:1;min-width:0;}
+.ai-head-txt h4{font-size:13px;font-weight:700;}
+.ai-head-txt p{font-size:10px;color:var(--t3);font-family:var(--mo);margin-top:1px;}
+.ai-close{background:none;border:none;color:var(--t2);font-size:16px;cursor:pointer;padding:4px;line-height:1;}
+.ai-close:hover{color:var(--tx);}
+.ai-ctx-pill{margin:0 16px;padding:6px 10px;border-radius:7px;background:rgba(79,142,247,.08);
+  border:1px solid rgba(79,142,247,.2);font-size:10.5px;color:var(--t2);font-family:var(--mo);
+  display:flex;align-items:center;gap:6px;margin-top:12px;}
+.ai-ctx-pill .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.ai-ctx-pill.ok .dot{background:var(--gr);}
+.ai-ctx-pill.warn .dot{background:var(--ye);}
+.ai-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;}
+.ai-msg{max-width:88%;font-size:12.5px;line-height:1.55;padding:9px 12px;border-radius:12px;white-space:pre-wrap;}
+.ai-msg.user{align-self:flex-end;background:var(--ac);color:#fff;border-bottom-right-radius:3px;}
+.ai-msg.bot{align-self:flex-start;background:var(--s3);color:var(--tx);border:1px solid var(--b2);border-bottom-left-radius:3px;}
+.ai-msg.err{align-self:flex-start;background:rgba(247,79,79,.1);color:var(--re);border:1px solid rgba(247,79,79,.3);}
+.ai-actions{align-self:flex-start;display:flex;flex-direction:column;gap:4px;max-width:88%;}
+.ai-action-chip{font-size:10.5px;font-family:var(--mo);padding:5px 9px;border-radius:6px;
+  background:rgba(45,212,160,.1);border:1px solid rgba(45,212,160,.3);color:var(--gr);}
+.ai-nav-btn{align-self:flex-start;font-size:11px;padding:6px 12px;border-radius:7px;background:rgba(79,142,247,.12);
+  border:1px solid var(--ac);color:var(--ac);cursor:pointer;font-family:var(--fn);}
+.ai-suggest{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 12px;}
+.ai-suggest-chip{font-size:10.5px;padding:5px 10px;border-radius:20px;background:var(--s3);border:1px solid var(--b2);
+  color:var(--t2);cursor:pointer;font-family:var(--fn);}
+.ai-suggest-chip:hover{border-color:var(--ac);color:var(--ac);}
+.ai-typing{align-self:flex-start;display:flex;gap:4px;padding:10px 12px;background:var(--s3);border-radius:12px;border:1px solid var(--b2);}
+.ai-typing span{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:ai-bounce 1.2s infinite ease-in-out;}
+.ai-typing span:nth-child(2){animation-delay:.15s;} .ai-typing span:nth-child(3){animation-delay:.3s;}
+@keyframes ai-bounce{0%,60%,100%{transform:translateY(0);opacity:.5;}30%{transform:translateY(-4px);opacity:1;}}
+.ai-input-row{border-top:1px solid var(--b1);padding:10px 12px;display:flex;gap:8px;align-items:flex-end;background:var(--s2);}
+.ai-input-row textarea{flex:1;min-height:36px;max-height:110px;resize:none;font-size:12.5px;padding:8px 11px;}
+.ai-send{width:36px;height:36px;border-radius:9px;background:var(--ac);border:none;color:#fff;cursor:pointer;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.ai-send:disabled{background:var(--b2);color:var(--t3);cursor:not-allowed;}
+@media(max-width:480px){
+  .ai-panel{right:10px;left:10px;width:auto;bottom:80px;}
+  .ai-fab{right:16px;bottom:16px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── Sidebar ────────────────────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">⚙</div>
+    <h1>Grid Processor</h1>
+    <p>Commission Grid Portal</p>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-sec-label">Standard Grid</div>
+    <button class="nav-item" id="nav-s1" onclick="goPanel('std',1)">
+      <span class="step-badge" id="sb-s1">1</span> Upload Files
+    </button>
+    <button class="nav-item" id="nav-s2" onclick="goPanel('std',2)">
+      <span class="step-badge" id="sb-s2">2</span> Configure Source
+    </button>
+    <button class="nav-item" id="nav-s3" onclick="goPanel('std',3)">
+      <span class="step-badge" id="sb-s3">3</span> Column Mapping
+    </button>
+    <button class="nav-item" id="nav-s4" onclick="goPanel('std',4)">
+      <span class="step-badge" id="sb-s4">4</span> Transformations
+    </button>
+    <button class="nav-item" id="nav-s5" onclick="goPanel('std',5)">
+      <span class="step-badge" id="sb-s5">5</span> Process &amp; Export
+    </button>
+
+    <div class="nav-sec-label" style="margin-top:14px;">SK Finance</div>
+    <button class="nav-item" id="nav-k1" onclick="goPanel('sk',1)">
+      <span class="step-badge" id="sb-k1">1</span> Upload Files
+    </button>
+    <button class="nav-item" id="nav-k2" onclick="goPanel('sk',2)">
+      <span class="step-badge" id="sb-k2">2</span> Sheet Structure
+    </button>
+    <button class="nav-item" id="nav-k3" onclick="goPanel('sk',3)">
+      <span class="step-badge" id="sb-k3">3</span> Output Mapping
+    </button>
+    <button class="nav-item" id="nav-k4" onclick="goPanel('sk',4)">
+      <span class="step-badge" id="sb-k4">4</span> Transformations
+    </button>
+    <button class="nav-item" id="nav-k5" onclick="goPanel('sk',5)">
+      <span class="step-badge" id="sb-k5">5</span> Process &amp; Export
+    </button>
+  </nav>
+
+  <div class="sidebar-foot">
+    <div style="font-size:10px;color:var(--t3);font-family:var(--mo);margin-bottom:6px;">SPECIAL MARKERS</div>
+    <span class="marker-pill mp-blue">__DETRIFF_VALUE__</span>
+    <span class="marker-pill mp-gr">__RTO_CODES__</span>
+    <span class="marker-pill mp-ye">__UNIQUE_ID__</span>
+    <span class="marker-pill mp-re">__LITERAL__:val</span>
+    <span class="marker-pill mp-or">__DETRIFF_RANGE__</span>
+
+    <div style="border-top:1px solid var(--b1);margin:14px 0 10px;"></div>
+    <div style="font-size:10px;color:var(--t3);font-family:var(--mo);margin-bottom:8px;">CONFIG PROFILE</div>
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <button class="btn btn-sec btn-sm" style="width:100%;justify-content:center;" onclick="exportConfig()">💾 Export Config</button>
+      <label class="btn btn-sec btn-sm" style="width:100%;justify-content:center;cursor:pointer;margin:0;">
+        📂 Import Config
+        <input type="file" id="cfg-import-input" accept=".json" style="display:none;" onchange="importConfig(event)"/>
+      </label>
+    </div>
+    <div id="cfg-status" style="font-size:10px;font-family:var(--mo);margin-top:7px;display:none;"></div>
+  </div>
+</aside>
+
+<!-- ── Main area ──────────────────────────────────────────────────────── -->
+<div class="main-area">
+
+<!-- Mode bar -->
+<div class="mode-bar">
+  <button class="mode-btn active" id="mode-std" onclick="setMode('std')">
+    <span class="mode-icon">📊</span> Standard Grid
+  </button>
+  <button class="mode-btn sk" id="mode-sk" onclick="setMode('sk')">
+    <span class="mode-icon">🏦</span> SK Finance
+  </button>
+</div>
+
+<!-- ══════════ STANDARD PANELS ══════════ -->
+
+<!-- S1: Upload -->
+<div class="portal-panel active" id="p-std-1">
+  <div class="ph"><h2>Upload Files</h2><p>Upload your commission grid Excel/XLSB and optionally an RTO cluster file.</p></div>
+  <div class="card">
+    <div class="card-title">Base Grid File <span class="badge badge-blue">Required</span></div>
+    <div class="upload-zone" id="uz-main" ondragover="doDrag(event,'main')" ondragleave="doDragLeave('main')" ondrop="doDrop(event,'main')">
+      <input type="file" id="fi-main" accept=".xlsx,.xlsb,.xls,.csv" onchange="handleFile('main')"/>
+      <div class="upload-icon">📊</div>
+      <h3>Drop Excel / XLSB / CSV here</h3>
+      <p>Supports .xlsx · .xlsb · .xls · .csv — up to 100 MB</p>
+      <div id="fd-main"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">RTO Cluster File <span class="badge badge-gr">Optional</span></div>
+    <div class="upload-zone" id="uz-rto" ondragover="doDrag(event,'rto')" ondragleave="doDragLeave('rto')" ondrop="doDrop(event,'rto')">
+      <input type="file" id="fi-rto" accept=".xlsx,.xls" onchange="handleFile('rto')"/>
+      <div class="upload-icon">🗺️</div>
+      <h3>RTO mapping file</h3>
+      <p>Sheet: Data · Columns: UW Budget Cluster, Code</p>
+      <div id="fd-rto"></div>
+    </div>
+  </div>
+  <button class="btn btn-primary btn-lg" onclick="doUpload('std')" id="btn-upload-std" disabled>Upload &amp; Continue →</button>
+</div>
+
+<!-- S2: Configure -->
+<div class="portal-panel" id="p-std-2">
+  <div class="ph"><h2>Configure Source</h2><p>Select a preset or manually set sheet, header row and start column.</p></div>
+  <div class="card">
+    <div class="card-title">Quick Presets</div>
+    <div class="preset-grid" id="preset-grid"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Source Configuration</div>
+    <div class="fr3">
+      <div class="fg"><label>Sheet Name</label><select id="cfg-sheet"><option>Loading…</option></select></div>
+      <div class="fg"><label>Header Row (1-indexed)</label><input type="number" id="cfg-hr" value="2" min="1"/></div>
+      <div class="fg"><label>Start Column (1-indexed)</label><input type="number" id="cfg-sc" value="2" min="1"/></div>
+    </div>
+    <div class="fg"><label>Output File Name</label><input type="text" id="cfg-out" value="grid_output"/></div>
+    <button class="btn btn-sec" onclick="doPreview()">🔍 Preview Columns</button>
+  </div>
+  <div id="preview-result"></div>
+  <div class="action-row" style="margin-top:6px">
+    <button class="btn btn-sec" onclick="goPanel('std',1)">← Back</button>
+    <button class="btn btn-primary btn-lg" id="btn-to-s3" onclick="goPanel('std',3)" disabled>Continue to Mapping →</button>
+  </div>
+</div>
+
+<!-- S3: Mapping -->
+<div class="portal-panel" id="p-std-3">
+  <div class="ph"><h2>Column Mapping</h2><p>Set your target headers, then map each one visually — pick a source column or insert a special marker in one click.</p></div>
+
+  <div class="card">
+    <div class="card-title">Target Headers</div>
+    <div class="fg">
+      <label>One column per line (or comma-separated)</label>
+      <textarea id="target-hdrs" rows="6" placeholder="Version Id*&#10;Oem Type*&#10;Biz Mix*&#10;Detriff Discount Ll*&#10;…" oninput="scheduleRebuildMapper()"></textarea>
+    </div>
+    <button class="btn btn-sec btn-sm" onclick="rebuildMapper()" style="margin-top:4px">↻ Refresh Mapper</button>
+  </div>
+
+  <!-- Visual Mapper -->
+  <div class="card" id="visual-mapper-card">
+    <div class="card-title">
+      Visual Mapper
+      <span class="badge badge-blue" id="mapper-status-badge">0 rows</span>
+      <button class="btn btn-sec btn-xs" style="margin-left:auto" onclick="toggleRawJson()">⌨ Raw JSON</button>
+    </div>
+
+    <!-- Source columns hint bar -->
+    <div id="mapper-no-preview" class="sb sb-warn" style="margin-bottom:12px;display:none">
+      ⚠ No source columns loaded — go to Step 2 and click "Preview Columns" first. You can still map using special markers.
+    </div>
+
+    <!-- Column filter -->
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <input type="text" id="mapper-filter" placeholder="🔍 Filter target headers…" style="max-width:260px;padding:6px 10px;font-size:12px" oninput="filterMapper(this.value)"/>
+      <span style="font-size:11px;color:var(--t3);font-family:var(--mo)">Special markers:</span>
+      <button class="sp-btn" onclick="setAllUnmapped('__DETRIFF_VALUE__')" title="Set all unmapped rows to DETRIFF_VALUE">⚡ DETRIFF</button>
+      <button class="sp-btn" onclick="setAllUnmapped('__RTO_CODES__')" title="Set all unmapped rows to RTO_CODES">🗺 RTO</button>
+      <button class="sp-btn" onclick="setAllUnmapped('__UNIQUE_ID__')" title="Set all unmapped rows to UNIQUE_ID">🔑 UID</button>
+    </div>
+
+    <div id="mapper-rows" style="display:flex;flex-direction:column;gap:4px;"></div>
+    <div id="mapper-empty" class="hint" style="padding:12px 0;display:none">Add target headers above to start mapping.</div>
+  </div>
+
+  <!-- Raw JSON (collapsible) -->
+  <div class="card" id="raw-json-card" style="display:none">
+    <div class="card-title">Raw JSON <span class="badge badge-blue">auto-synced from mapper</span>
+      <button class="btn btn-sec btn-xs" style="margin-left:auto" onclick="syncFromRaw()" title="Parse raw JSON and push back into the visual mapper">↑ Apply Raw JSON to Mapper</button>
+    </div>
+    <div class="special-toolbar">
+      <span style="font-size:11px;color:var(--t3);font-family:var(--mo)">Insert at cursor:</span>
+      <button class="sp-btn" onclick="insertMarker('__DETRIFF_VALUE__')">DETRIFF_VALUE</button>
+      <button class="sp-btn" onclick="insertMarker('__RTO_CODES__')">RTO_CODES</button>
+      <button class="sp-btn" onclick="insertMarker('__UNIQUE_ID__')">UNIQUE_ID</button>
+      <button class="sp-btn" onclick="insertMarker('__LITERAL__:')">LITERAL:</button>
+      <button class="sp-btn" onclick="insertMarker('__DETRIFF_RANGE__')">DETRIFF_RANGE</button>
+    </div>
+    <textarea id="map-json" rows="14" placeholder='{ "Version Id*": "__LITERAL__:my_grid_v1", "Biz Mix*": "LOB" }'></textarea>
+    <div id="json-err" class="json-err" style="display:none"></div>
+    <div id="src-cols-area" style="display:none;margin-top:10px">
+      <div class="hint" style="margin-bottom:6px;">Available source columns (click to insert):</div>
+      <div class="col-chips" id="src-chips"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">RTO Settings</div>
+    <div class="fg" style="max-width:340px"><label>Cluster Source Column</label><input type="text" id="cfg-rto-src" value="UW Budget Cluster"/></div>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-sec" onclick="goPanel('std',2)">← Back</button>
+    <button class="btn btn-primary btn-lg" onclick="goPanel('std',4)">Continue to Transformations →</button>
+  </div>
+</div>
+
+<!-- S4: Transformations -->
+<div class="portal-panel" id="p-std-4">
+  <div class="ph"><h2>Column Transformations</h2><p>Optional: apply case changes, value maps, conditional logic and more to output columns.</p></div>
+  <div class="card">
+    <div class="card-title">Transformation Rules
+      <button class="btn btn-sec btn-sm" onclick="addTxRule('std')">+ Add Rule</button>
+    </div>
+    <div id="tx-rules-std"></div>
+    <div id="tx-empty-std" class="hint" style="padding:10px 0;">No transformation rules defined. Click "+ Add Rule" to add one, or skip and proceed.</div>
+  </div>
+  <div class="card" style="background:rgba(79,142,247,.03)">
+    <div class="card-title" style="font-size:13px;">Transformation Reference</div>
+    <div style="font-family:var(--mo);font-size:11px;color:var(--t2);line-height:2;">
+      <b style="color:var(--tx)">case</b> — UPPER / lower / Title &nbsp;·&nbsp;
+      <b style="color:var(--tx)">trim</b> — strip whitespace &nbsp;·&nbsp;
+      <b style="color:var(--tx)">replace</b> — find &amp; replace text &nbsp;·&nbsp;
+      <b style="color:var(--tx)">value_map</b> — map one value to another &nbsp;·&nbsp;<br/>
+      <b style="color:var(--tx)">prefix / suffix</b> — prepend/append text &nbsp;·&nbsp;
+      <b style="color:var(--tx)">default_if_empty</b> — fill empty cells &nbsp;·&nbsp;
+      <b style="color:var(--tx)">number_format</b> — round to N decimals &nbsp;·&nbsp;<br/>
+      <b style="color:var(--tx)">math_op</b> — apply a math expression (<code style="color:var(--ac)">x * 1.18</code>, <code style="color:var(--ac)">round(x/100,2)</code>) — non-numeric cells are skipped automatically &nbsp;·&nbsp;<br/>
+      <b style="color:var(--tx)">conditional</b> — IF col A = X THEN set col B based on col B's current value
+    </div>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-sec" onclick="goPanel('std',3)">← Back</button>
+    <button class="btn btn-primary btn-lg" onclick="goPanel('std',5)">Continue to Process →</button>
+  </div>
+</div>
+
+<!-- S5: Process -->
+<div class="portal-panel" id="p-std-5">
+  <div class="ph"><h2>Process &amp; Export</h2><p>Run the transformation and download your output.</p></div>
+  <div class="card" id="std-summary">
+    <div class="card-title">Configuration Summary</div>
+    <div id="std-sum-content"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Run Processing</div>
+    <div id="std-proc-status"></div>
+    <button class="btn btn-primary btn-lg" onclick="runProcess('std')" id="btn-run-std">▶ Run Grid Processor</button>
+  </div>
+  <div id="std-result" style="display:none" class="fade">
+    <div class="stats-row" id="std-stats"></div>
+    <div class="card">
+      <div class="card-title">Output Preview (first 5 rows)</div>
+      <div class="tw" id="std-preview-tbl"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Detriff Merger</div>
+      <div id="std-merge-status"></div>
+      <p style="color:var(--t2);font-size:13px;margin-bottom:14px;">Merge rows that are identical except for detriff range — collapses min LL / max UL. Significantly reduces row count.</p>
+      <div class="action-row">
+        <button class="btn btn-gr" onclick="runMerge('std')" id="btn-merge-std">✦ Apply Detriff Merger</button>
+        <button class="btn btn-sec" onclick="dlDirect('std')" id="btn-dl-direct">↓ Download Without Merge</button>
+      </div>
+    </div>
+    <div id="std-merged-section" style="display:none" class="fade">
+      <div class="card">
+        <div class="card-title">Merged Output</div>
+        <div id="std-merged-stats"></div>
+        <div class="tw" id="std-merged-tbl" style="margin-top:14px"></div>
+        <div style="margin-top:14px"><button class="btn btn-gr btn-lg" onclick="dlMerged('std')">↓ Download Merged CSV</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="action-row" style="margin-top:10px"><button class="btn btn-sec" onclick="goPanel('std',4)">← Back</button></div>
+</div>
+
+<!-- ══════════ SK FINANCE PANELS ══════════ -->
+
+<!-- K1: SK Upload -->
+<div class="portal-panel" id="p-sk-1">
+  <div class="ph"><h2>SK Finance <span class="ph-tag">SK Finance Mode</span></h2><p>Upload the Banca grid Excel containing the SK Finance sheet, plus optionally the RTO cluster file.</p></div>
+  <div class="card">
+    <div class="card-title">Banca Grid File <span class="badge badge-blue">Required · SK Finance sheet</span></div>
+    <div class="upload-zone" id="uz-sk-main" ondragover="doDrag(event,'sk-main')" ondragleave="doDragLeave('sk-main')" ondrop="doDrop(event,'sk-main')">
+      <input type="file" id="fi-sk-main" accept=".xlsx,.xlsb,.xls" onchange="handleFile('sk-main')"/>
+      <div class="upload-icon">🏦</div>
+      <h3>Drop the Banca Excel file here</h3>
+      <p>Must contain the SK Finance sheet with multi-row header structure</p>
+      <div id="fd-sk-main"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">RTO Cluster File <span class="badge badge-gr">Optional</span></div>
+    <div class="upload-zone" id="uz-sk-rto" ondragover="doDrag(event,'sk-rto')" ondragleave="doDragLeave('sk-rto')" ondrop="doDrop(event,'sk-rto')">
+      <input type="file" id="fi-sk-rto" accept=".xlsx,.xls" onchange="handleFile('sk-rto')"/>
+      <div class="upload-icon">🗺️</div>
+      <h3>RTO mapping file</h3>
+      <p>Sheet: Data · Columns: UW Budget Cluster, Code</p>
+      <div id="fd-sk-rto"></div>
+    </div>
+  </div>
+  <button class="btn btn-pk btn-lg" onclick="doUpload('sk')" id="btn-upload-sk" disabled>Upload &amp; Continue →</button>
+</div>
+
+<!-- K2: SK Structure -->
+<div class="portal-panel" id="p-sk-2">
+  <div class="ph"><h2>Sheet Structure <span class="ph-tag">SK Finance Mode</span></h2><p>Configure which cells/rows contain agent info, header labels, and where data starts. Preview the sheet to verify.</p></div>
+  <div class="card">
+    <div class="card-title">Sheet Selection</div>
+    <div class="fr">
+      <div class="fg"><label>Sheet Name</label><select id="sk-sheet"><option>Loading…</option></select></div>
+      <div class="fg"><label>Version ID (hardcoded)</label><input type="text" id="sk-ver" placeholder="e.g. banca_sk_Grid_1"/></div>
+    </div>
+    <button class="btn btn-sec" onclick="skPreview()">🔍 Preview Sheet Structure</button>
+  </div>
+  <div id="sk-snapshot-card" style="display:none" class="card fade">
+    <div class="card-title">Sheet Snapshot <span id="sk-snap-info" class="badge badge-ye"></span></div>
+    <div id="sk-snapshot"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Metadata Cell Positions <span class="badge badge-or">Row, Column (1-indexed)</span></div>
+    <div class="fr">
+      <div class="fg"><label>Agent Code Cell [row, col]</label>
+        <div style="display:flex;gap:6px"><input type="number" id="sk-acc-r" value="1" min="1" style="width:70px"/> <input type="number" id="sk-acc-c" value="2" min="1" style="width:70px"/><span style="color:var(--t2);align-self:center;font-size:12px">→ reads pol_agent_code</span></div></div>
+      <div class="fg"><label>Relationship Code Cell [row, col]</label>
+        <div style="display:flex;gap:6px"><input type="number" id="sk-rel-r" value="3" min="1" style="width:70px"/> <input type="number" id="sk-rel-c" value="2" min="1" style="width:70px"/><span style="color:var(--t2);align-self:center;font-size:12px">→ primary_agent_code</span></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Multi-Row Header Configuration</div>
+    <div class="fr4">
+      <div class="fg"><label>Payment Basis Row</label><input type="number" id="sk-pb-row" value="9" min="1"/></div>
+      <div class="fg"><label>NCB Row</label><input type="number" id="sk-ncb-row" value="10" min="1"/></div>
+      <div class="fg"><label>CC (Cubic Cap) Row</label><input type="number" id="sk-cc-row" value="11" min="1"/></div>
+      <div class="fg"><label>LOB Row</label><input type="number" id="sk-lob-row" value="12" min="1"/></div>
+    </div>
+    <div class="fr4">
+      <div class="fg"><label>Data Start Row</label><input type="number" id="sk-ds-row" value="14" min="1"/></div>
+      <div class="fg"><label>State Column</label><input type="number" id="sk-st-col" value="1" min="1"/></div>
+      <div class="fg"><label>Cluster Column</label><input type="number" id="sk-cl-col" value="2" min="1"/></div>
+      <div class="fg"><label>Data Start Column</label><input type="number" id="sk-dc-col" value="3" min="1"/></div>
+    </div>
+    <div class="fg">
+      <label>Valid Payment Basis Values (comma-separated)</label>
+      <input type="text" id="sk-vpb" value="on OD,on TP"/>
+      <div class="hint">Only columns with these payment basis values will be included as data columns</div>
+    </div>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-sec" onclick="goPanel('sk',1)">← Back</button>
+    <button class="btn btn-pk btn-lg" onclick="goPanel('sk',3)">Continue to Output Mapping →</button>
+  </div>
+</div>
+
+<!-- K3: SK Output Mapping -->
+<div class="portal-panel" id="p-sk-3">
+  <div class="ph"><h2>Output Mapping <span class="ph-tag">SK Finance Mode</span></h2><p>Define output columns and map each to a source key or literal value.</p></div>
+  <div class="card">
+    <div class="card-title">Available Source Keys <span class="badge badge-or">click to insert</span></div>
+    <div id="sk-source-keys" style="margin-bottom:4px"></div>
+    <div class="hint">These are computed values from SK Finance structure. Use them as values in the output mapping JSON below.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Output Columns (one per line)</div>
+    <textarea id="sk-out-cols" rows="8"></textarea>
+  </div>
+  <div class="card">
+    <div class="card-title">Output Mapping <span class="badge badge-blue">JSON</span></div>
+    <div class="special-toolbar">
+      <span style="font-size:11px;color:var(--t3);font-family:var(--mo)">Insert:</span>
+      <button class="sp-btn" onclick="insertSKMarker('__LITERAL__:')">LITERAL:</button>
+      <button class="sp-btn" onclick="insertSKMarker('__agent_code__')">agent_code</button>
+      <button class="sp-btn" onclick="insertSKMarker('__relationship_code__')">relationship_code</button>
+      <button class="sp-btn" onclick="insertSKMarker('__lob__')">lob</button>
+      <button class="sp-btn" onclick="insertSKMarker('__comm_rate__')">comm_rate</button>
+      <button class="sp-btn" onclick="insertSKMarker('__rto_codes__')">rto_codes</button>
+      <button class="sp-btn" onclick="insertSKMarker('__banca_outgo__')">banca_outgo</button>
+      <button class="sp-btn" onclick="insertSKMarker('__state__')">state</button>
+      <button class="sp-btn" onclick="insertSKMarker('__cc_ll__')">cc_ll</button>
+      <button class="sp-btn" onclick="insertSKMarker('__cc_ul__')">cc_ul</button>
+      <button class="sp-btn" onclick="insertSKMarker('__ncb_ll__')">ncb_ll</button>
+      <button class="sp-btn" onclick="insertSKMarker('__ncb_ul__')">ncb_ul</button>
+    </div>
+    <textarea id="sk-out-map" rows="20"></textarea>
+    <div id="sk-json-err" class="json-err" style="display:none"></div>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-sec" onclick="goPanel('sk',2)">← Back</button>
+    <button class="btn btn-pk btn-lg" onclick="goPanel('sk',4)">Continue to Transformations →</button>
+  </div>
+</div>
+
+<!-- K4: SK Transformations -->
+<div class="portal-panel" id="p-sk-4">
+  <div class="ph"><h2>Transformations <span class="ph-tag">SK Finance Mode</span></h2><p>Optional post-processing rules applied to the output CSV before download.</p></div>
+  <div class="card">
+    <div class="card-title">Transformation Rules
+      <button class="btn btn-sec btn-sm" onclick="addTxRule('sk')">+ Add Rule</button>
+    </div>
+    <div id="tx-rules-sk"></div>
+    <div id="tx-empty-sk" class="hint" style="padding:10px 0;">No rules defined. Click "+ Add Rule" or proceed.</div>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-sec" onclick="goPanel('sk',3)">← Back</button>
+    <button class="btn btn-pk btn-lg" onclick="goPanel('sk',5)">Continue to Process →</button>
+  </div>
+</div>
+
+<!-- K5: SK Process -->
+<div class="portal-panel" id="p-sk-5">
+  <div class="ph"><h2>Process &amp; Export <span class="ph-tag">SK Finance Mode</span></h2></div>
+  <div class="card">
+    <div class="card-title">SK Finance Processing</div>
+    <div id="sk-proc-status"></div>
+    <div class="fg" style="max-width:320px;margin-bottom:12px"><label>Output File Name</label><input type="text" id="sk-out-name" value="sk_finance_output"/></div>
+    <button class="btn btn-pk btn-lg" onclick="runProcess('sk')" id="btn-run-sk">▶ Run SK Finance Processor</button>
+  </div>
+  <div id="sk-result" style="display:none" class="fade">
+    <div class="stats-row" id="sk-stats"></div>
+    <div class="card">
+      <div class="card-title">Output Preview</div>
+      <div class="tw" id="sk-preview-tbl"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Download</div>
+      <div class="action-row">
+        <button class="btn btn-gr btn-lg" onclick="dlDirect('sk')">↓ Download CSV</button>
+      </div>
+    </div>
+  </div>
+  <div class="action-row" style="margin-top:10px"><button class="btn btn-sec" onclick="goPanel('sk',4)">← Back</button></div>
+</div>
+
+</div><!-- /main-area -->
+</div><!-- /app -->
+
+<!-- ── AI Assistant widget ──────────────────────────────────────────────── -->
+<button class="ai-fab" id="ai-fab" onclick="toggleAI()" title="AI Assistant">
+  🤖<span class="ai-dot"></span>
+</button>
+
+<div class="ai-panel" id="ai-panel">
+  <div class="ai-head">
+    <div class="ai-avatar">🤖</div>
+    <div class="ai-head-txt">
+      <h4>AI Assistant</h4>
+      <p>Powered by Groq</p>
+    </div>
+    <button class="ai-close" onclick="toggleAI(false)">✕</button>
+  </div>
+  <div class="ai-ctx-pill" id="ai-ctx-pill"></div>
+  <div class="ai-body" id="ai-body"></div>
+  <div class="ai-suggest" id="ai-suggest"></div>
+  <div class="ai-input-row">
+    <textarea id="ai-input" placeholder="Ask how to do something, or ask me to edit your config…" onkeydown="aiKeydown(event)"></textarea>
+    <button class="ai-send" id="ai-send-btn" onclick="sendAIMessage()">➤</button>
+  </div>
+</div>
+
+<script>
+// ─── AI Assistant ─────────────────────────────────────────────────────────────
+const AI = { open:false, history:[], busy:false, statusChecked:false, configured:true };
+
+function toggleAI(force) {
+  const panel = document.getElementById('ai-panel');
+  AI.open = (force===undefined) ? !AI.open : force;
+  panel.classList.toggle('open', AI.open);
+  if (AI.open) {
+    if (!AI.statusChecked) checkAIStatus();
+    if (!document.getElementById('ai-body').children.length) aiGreet();
+    updateAIContextPill();
+    document.getElementById('ai-input').focus();
+  }
+}
+
+async function checkAIStatus() {
+  AI.statusChecked = true;
+  try {
+    const res = await fetch('api/ai/status');
+    const d = await res.json();
+    AI.configured = !!d.configured;
+    if (!AI.configured) {
+      aiAddMsg('bot', "Heads up — the AI Assistant isn't fully set up yet. The server admin needs to set a GROQ_API_KEY on the backend before I can respond. You can still browse the portal as usual!");
+    }
+  } catch(e) { /* silent — will surface on send */ }
+}
+
+function aiGreet() {
+  aiAddMsg('bot', "Hi! I'm your portal assistant. I can explain how any step works, or, once you've got a basic config loaded (a preset or your own Target Headers + Column Mapping), I can edit the mapping and transformations for you directly. What do you need?");
+  renderAISuggestions();
+}
+
+function renderAISuggestions() {
+  const box = document.getElementById('ai-suggest');
+  const hasConfig = aiHasConfig();
+  const chips = hasConfig
+    ? ["Map 'Fuel Type*' to a source column", "Uppercase the Model column", "Where do I set the RTO codes?"]
+    : ["Where do I upload my file?", "What does __DETRIFF_VALUE__ mean?", "How do presets work?"];
+  box.innerHTML = chips.map(c=>`<span class="ai-suggest-chip" onclick="aiUseSuggestion(this)">${esc(c)}</span>`).join('');
+}
+function aiUseSuggestion(el) {
+  document.getElementById('ai-input').value = el.textContent;
+  sendAIMessage();
+}
+
+function aiHasConfig() {
+  if (S.mode === 'sk') return !!(S.sk.defaultCfg);
+  const th = getTargetHeaders();
+  let cm = {};
+  try { cm = JSON.parse(document.getElementById('map-json')?.value || '{}'); } catch(e){}
+  return th.length > 0 && Object.keys(cm).length > 0;
+}
+
+function updateAIContextPill() {
+  const pill = document.getElementById('ai-ctx-pill');
+  const hasConfig = aiHasConfig();
+  const modeLabel = S.mode === 'sk' ? 'SK Finance' : 'Standard Grid';
+  pill.className = 'ai-ctx-pill ' + (hasConfig ? 'ok' : 'warn');
+  pill.innerHTML = `<span class="dot"></span>${modeLabel} · ${hasConfig ? 'config loaded — I can edit it' : 'no config yet — ask me how, or pick a preset first'}`;
+}
+
+function aiKeydown(e) {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendAIMessage(); }
+}
+
+function aiAddMsg(role, text) {
+  const body = document.getElementById('ai-body');
+  const div = document.createElement('div');
+  div.className = 'ai-msg ' + role;
+  div.textContent = text;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+  return div;
+}
+
+function aiAddActionChips(actions) {
+  if (!actions || !actions.length) return;
+  const applied = actions.filter(a=>a.type!=='none' && a.type!=='navigate');
+  const nav = actions.find(a=>a.type==='navigate');
+  const body = document.getElementById('ai-body');
+  if (applied.length) {
+    const wrap = document.createElement('div');
+    wrap.className = 'ai-actions';
+    wrap.innerHTML = applied.map(a=>`<span class="ai-action-chip">✓ ${esc(aiDescribeAction(a))}</span>`).join('');
+    body.appendChild(wrap);
+  }
+  if (nav) {
+    const btn = document.createElement('button');
+    btn.className = 'ai-nav-btn';
+    btn.textContent = `→ Take me to Step ${nav.panel}`;
+    btn.onclick = () => { goPanel(nav.mode||S.mode, nav.panel); };
+    body.appendChild(btn);
+  }
+  body.scrollTop = body.scrollHeight;
+}
+
+function aiDescribeAction(a) {
+  switch(a.type) {
+    case 'set_mapping': return `Mapped "${a.target_header}" → ${a.value}`;
+    case 'set_target_headers': return `Updated target headers (${(a.headers||[]).length} columns)`;
+    case 'add_transformation': return `Added "${a.op && a.op.type}" to "${a.column}"`;
+    case 'remove_transformation': return `Removed operation ${a.op_index} from "${a.column}"`;
+    default: return a.type;
+  }
+}
+
+function gatherAIContext() {
+  const mode = S.mode;
+  if (mode === 'sk') {
+    return {
+      mode: 'sk',
+      sheet_name: document.getElementById('sk-sheet')?.value || null,
+      sk_has_config: !!S.sk.defaultCfg,
+      transformations: S.txRules.sk.filter(r=>r.column).map(r=>({column:r.column,ops:r.ops.filter(o=>o.type)})),
+      source_columns: [],
+    };
+  }
+  let cm = {};
+  try { cm = JSON.parse(document.getElementById('map-json')?.value || '{}'); } catch(e){}
+  return {
+    mode: 'std',
+    sheet_name: document.getElementById('cfg-sheet')?.value || null,
+    target_headers: getTargetHeaders(),
+    column_mapping: cm,
+    source_columns: S.std.srcCols || [],
+    transformations: S.txRules.std.filter(r=>r.column).map(r=>({column:r.column,ops:r.ops.filter(o=>o.type)})),
+  };
+}
+
+async function sendAIMessage() {
+  if (AI.busy) return;
+  const input = document.getElementById('ai-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  aiAddMsg('user', msg);
+  AI.history.push({role:'user', content:msg});
+  AI.busy = true;
+  document.getElementById('ai-send-btn').disabled = true;
+  const body = document.getElementById('ai-body');
+  const typing = document.createElement('div');
+  typing.className = 'ai-typing';
+  typing.innerHTML = '<span></span><span></span><span></span>';
+  body.appendChild(typing);
+  body.scrollTop = body.scrollHeight;
+
+  try {
+    const res = await fetch('api/ai/chat', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message: msg, history: AI.history.slice(-10), context: gatherAIContext()})});
+    const d = await res.json();
+    typing.remove();
+    if (d.error) { aiAddMsg('err', '⚠ ' + d.error); AI.busy=false; document.getElementById('ai-send-btn').disabled=false; return; }
+    aiAddMsg('bot', d.reply || '(no response)');
+    AI.history.push({role:'assistant', content:d.reply || ''});
+    if (d.actions && d.actions.length) {
+      applyAIActions(d.actions);
+      aiAddActionChips(d.actions);
+    }
+    updateAIContextPill();
+    renderAISuggestions();
+  } catch(e) {
+    typing.remove();
+    aiAddMsg('err', '⚠ Could not reach the assistant: ' + e.message);
+  }
+  AI.busy = false;
+  document.getElementById('ai-send-btn').disabled = false;
+}
+
+function applyAIActions(actions) {
+  for (const a of actions) {
+    try {
+      if (a.type === 'set_mapping' && a.target_header) {
+        const ta = document.getElementById('map-json');
+        let cm = {};
+        try { cm = JSON.parse(ta.value || '{}'); } catch(e){}
+        cm[a.target_header] = a.value;
+        ta.value = JSON.stringify(cm, null, 2);
+        delete mapperState[a.target_header];
+        rebuildMapper();
+      } else if (a.type === 'set_target_headers' && Array.isArray(a.headers)) {
+        document.getElementById('target-hdrs').value = a.headers.join('\n');
+        rebuildMapper();
+      } else if (a.type === 'add_transformation' && a.column && a.op) {
+        const mode = S.mode;
+        let rule = S.txRules[mode].find(r=>r.column===a.column);
+        if (!rule) {
+          rule = {id: Date.now()+Math.floor(Math.random()*1000), column:a.column, ops:[]};
+          S.txRules[mode].push(rule);
+        }
+        rule.ops.push(a.op);
+        renderTxRules(mode);
+      } else if (a.type === 'remove_transformation' && a.column) {
+        const mode = S.mode;
+        const rule = S.txRules[mode].find(r=>r.column===a.column);
+        if (rule && rule.ops[a.op_index]!==undefined) rule.ops.splice(a.op_index,1);
+        renderTxRules(mode);
+      }
+    } catch(e) { console.error('AI action failed', a, e); }
+  }
+}
+</script>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+const S = {
+  mode: 'std',
+  std: { sessionId:null, filepath:null, rtoPath:null, sheets:[], srcCols:[], result:null, mergedResult:null },
+  sk:  { sessionId:null, filepath:null, rtoPath:null, sheets:[], result:null, defaultCfg:null },
+  txRules: { std:[], sk:[] }
+};
+const TX_TYPES = ['case','trim','strip_chars','replace','regex_replace','value_map','prefix','suffix','default_if_empty','number_format','math_op','conditional'];
+
+// ─── Mode & navigation ────────────────────────────────────────────────────────
+function setMode(m) {
+  S.mode = m;
+  document.getElementById('mode-std').classList.toggle('active', m==='std');
+  document.getElementById('mode-sk').classList.toggle('active', m==='sk');
+  // Show correct first panel
+  document.querySelectorAll('.portal-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`p-${m}-1`).classList.add('active');
+  updateNav(m, 1);
+}
+
+function goPanel(mode, n) {
+  S.mode = mode;
+  document.getElementById('mode-std').classList.toggle('active', mode==='std');
+  document.getElementById('mode-sk').classList.toggle('active', mode==='sk');
+  document.querySelectorAll('.portal-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`p-${mode}-${n}`).classList.add('active');
+  updateNav(mode, n);
+  if (mode==='std' && n===5) buildStdSummary();
+  if (mode==='std' && n===3) rebuildMapper();
+  window.scrollTo(0,0);
+}
+
+function updateNav(mode, active) {
+  for (let i=1;i<=5;i++) {
+    const el = document.getElementById(`nav-${mode==='std'?'s':'k'}${i}`);
+    if(!el) continue;
+    el.classList.remove('active','sk-active');
+    if (i===active) el.classList.add(mode==='sk' ? 'sk-active' : 'active');
+  }
+}
+
+function markDone(mode, n) {
+  const el = document.getElementById(`sb-${mode==='std'?'s':'k'}${n}`);
+  if(el) { el.closest('.nav-item').classList.add('done'); }
+}
+
+// ─── File handling ────────────────────────────────────────────────────────────
+const files = {};
+function doDrag(e,t){e.preventDefault();document.getElementById(`uz-${t}`).classList.add('drag');}
+function doDragLeave(t){document.getElementById(`uz-${t}`).classList.remove('drag');}
+function doDrop(e,t){e.preventDefault();doDragLeave(t);if(e.dataTransfer.files[0])setFile(t,e.dataTransfer.files[0]);}
+function handleFile(t){const i=document.getElementById(`fi-${t}`);if(i.files[0])setFile(t,i.files[0]);}
+function setFile(t,f){
+  files[t]=f;
+  document.getElementById(`uz-${t}`).classList.add('has-file');
+  document.getElementById(`fd-${t}`).innerHTML=`<div class="file-chip">📄 ${f.name} <span style="color:var(--t3)">(${(f.size/1024).toFixed(1)} KB)</span></div>`;
+  // Enable upload buttons
+  if(t==='main' && f) document.getElementById('btn-upload-std').disabled=false;
+  if(t==='sk-main' && f) document.getElementById('btn-upload-sk').disabled=false;
+}
+
+async function doUpload(mode) {
+  const mainKey = mode==='std'?'main':'sk-main';
+  const rtoKey  = mode==='std'?'rto':'sk-rto';
+  const btnId   = `btn-upload-${mode}`;
+  const btn = document.getElementById(btnId);
+  btn.disabled=true; btn.innerHTML='<div class="sp"></div> Uploading…';
+  const fd = new FormData();
+  fd.append('file', files[mainKey]);
+  if(files[rtoKey]) fd.append('rto_file', files[rtoKey]);
+  try {
+    const res = await fetch('api/upload',{method:'POST',body:fd});
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    const st = S[mode];
+    st.sessionId=data.session_id; st.filepath=data.filepath;
+    st.rtoPath=data.rto_filepath; st.sheets=data.sheets;
+    // Populate sheet selects
+    if(mode==='std') {
+      fillSheetSel('cfg-sheet', data.sheets, ['Sheet1','Sheet2']);
+      loadPresets();
+    } else {
+      fillSheetSel('sk-sheet', data.sheets, ['SK Finance']);
+      loadSKDefaults();
+    }
+    btn.disabled=false; btn.innerHTML='Upload &amp; Continue →';
+    markDone(mode,1);
+    goPanel(mode,2);
+  } catch(e) {
+    btn.disabled=false; btn.innerHTML='Upload &amp; Continue →';
+    showAlert(e.message);
+  }
+}
+
+function fillSheetSel(selId, sheets, preferred) {
+  const sel = document.getElementById(selId);
+  sel.innerHTML = sheets.map(s=>`<option value="${s}">${s}</option>`).join('');
+  for(const p of preferred) if(sheets.includes(p)){sel.value=p;break;}
+}
+
+// ─── Presets ──────────────────────────────────────────────────────────────────
+async function loadPresets() {
+  const res = await fetch('api/presets');
+  const presets = await res.json();
+  const grid = document.getElementById('preset-grid');
+  grid.innerHTML = Object.entries(presets).map(([n,c])=>
+    `<div class="preset-card" data-preset-name="${n.replace(/"/g,'&quot;')}" id="pc-${n.replace(/\W/g,'_')}">
+      <h4>${n}</h4><p>${(c.target_headers||[]).length} cols · Sheet: ${c.sheet_name}</p></div>`).join('');
+  grid.querySelectorAll('.preset-card').forEach(card => {
+    card.addEventListener('click', () => applyPreset(card.dataset.presetName));
+  });
+  window._presets = presets;
+}
+
+function applyPreset(name) {
+  const c = window._presets[name]; if(!c) return;
+  document.querySelectorAll('.preset-card').forEach(x=>x.classList.remove('sel'));
+  const el = document.getElementById(`pc-${name.replace(/\W/g,'_')}`);
+  if(el) el.classList.add('sel');
+  const sel = document.getElementById('cfg-sheet');
+  for(const o of sel.options) if(o.value===c.sheet_name){sel.value=c.sheet_name;break;}
+  document.getElementById('cfg-hr').value = c.header_row||2;
+  document.getElementById('cfg-sc').value = c.start_col||2;
+  document.getElementById('cfg-out').value = name.toLowerCase().replace(/\s+/g,'_');
+  if(c.target_headers) document.getElementById('target-hdrs').value = c.target_headers.join('\n');
+  if(c.column_mapping) document.getElementById('map-json').value = JSON.stringify(c.column_mapping,null,2);
+  if(c.rto_cluster_source) document.getElementById('cfg-rto-src').value = c.rto_cluster_source;
+}
+
+// ─── Preview ──────────────────────────────────────────────────────────────────
+async function doPreview() {
+  const el = document.getElementById('preview-result');
+  el.innerHTML = `<div class="sb sb-info"><div class="sp"></div> Loading preview…</div>`;
+  try {
+    const res = await fetch('api/preview',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({filepath:S.std.filepath,sheet_name:document.getElementById('cfg-sheet').value,
+        header_row:+document.getElementById('cfg-hr').value,start_col:+document.getElementById('cfg-sc').value})});
+    const d = await res.json();
+    if(d.error) throw new Error(d.error);
+    S.std.srcCols = d.columns;
+    renderSrcChips(d.columns);
+    el.innerHTML = `<div class="card fade">
+      <div class="card-title">Source Preview <span class="badge badge-blue">${d.row_count} rows</span>${d.has_detriff?'<span class="badge badge-gr">Detriff detected</span>':''}</div>
+      <div class="col-chips">${d.columns.slice(0,25).map(c=>`<span class="src-chip" onclick="insertColName('${c.replace(/'/g,"\\'")}')">${c}</span>`).join('')}${d.columns.length>25?`<span class="hint">+${d.columns.length-25} more</span>`:''}</div>
+      ${d.detriff_cols.length?`<p class="hint" style="color:var(--ye);margin-top:8px">⚡ Detriff columns: ${d.detriff_cols.join(', ')}</p>`:''}
+    </div>`;
+    document.getElementById('btn-to-s3').disabled = false;
+  } catch(e) {
+    el.innerHTML = `<div class="sb sb-err">❌ ${e.message}</div>`;
+  }
+}
+
+function renderSrcChips(cols) {
+  const area = document.getElementById('src-cols-area');
+  if (area) {
+    area.style.display = 'block';
+    document.getElementById('src-chips').innerHTML = cols.slice(0,50).map(c=>
+      `<span class="src-chip" onclick="insertColName('${c.replace(/'/g,"\\'")}')">${c}</span>`).join('');
+  }
+  // Also refresh mapper with new source columns
+  rebuildMapper();
+}
+
+function insertColName(c) {
+  const ta = document.getElementById('map-json');
+  const p = ta.selectionStart;
+  ta.value = ta.value.slice(0,p)+c+ta.value.slice(p); ta.focus();
+}
+function insertMarker(m) {
+  const ta = document.getElementById('map-json');
+  const p = ta.selectionStart;
+  ta.value = ta.value.slice(0,p)+m+ta.value.slice(p); ta.focus();
+}
+
+// ─── Visual Mapper Engine ──────────────────────────────────────────────────────
+// mapper state: { [targetHeader]: { type: 'col'|'literal'|'special', value: string } }
+const mapperState = {};
+let mapperRebuildTimer = null;
+
+function scheduleRebuildMapper() {
+  clearTimeout(mapperRebuildTimer);
+  mapperRebuildTimer = setTimeout(rebuildMapper, 400);
+}
+
+function getTargetHeaders() {
+  const raw = (document.getElementById('target-hdrs')?.value||'').trim();
+  if (!raw) return [];
+  return (raw.includes('\n') ? raw.split('\n') : raw.split(','))
+    .map(h=>h.trim()).filter(Boolean);
+}
+
+function getSourceCols() { return S.std.srcCols || []; }
+
+const SPECIAL_MARKERS = [
+  { key: '__DETRIFF_VALUE__',  label: 'DETRIFF',   cls: 'sel-dt'  },
+  { key: '__RTO_CODES__',      label: 'RTO',        cls: 'sel-rto' },
+  { key: '__UNIQUE_ID__',      label: 'UNIQUE_ID',  cls: 'sel-uid' },
+  { key: '__DETRIFF_RANGE__',  label: 'DET_RANGE',  cls: 'sel'     },
+];
+
+function classifyValue(val) {
+  if (!val) return { type: 'col', value: '' };
+  if (val.startsWith('__LITERAL__:')) return { type: 'literal', value: val.slice(12) };
+  const sp = SPECIAL_MARKERS.find(m => m.key === val);
+  if (sp) return { type: 'special', value: val };
+  return { type: 'col', value: val };
+}
+
+function rebuildMapper() {
+  const headers = getTargetHeaders();
+  const srcCols = getSourceCols();
+  const container = document.getElementById('mapper-rows');
+  const empty = document.getElementById('mapper-empty');
+  const badge = document.getElementById('mapper-status-badge');
+  const noPreview = document.getElementById('mapper-no-preview');
+  if (!container) return;
+
+  if (!headers.length) {
+    container.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    if (badge) badge.textContent = '0 rows';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  if (noPreview) noPreview.style.display = srcCols.length ? 'none' : 'flex';
+
+  // Parse current JSON into mapper state (for preset loads etc.)
+  const rawJson = (document.getElementById('map-json')?.value||'').trim();
+  let existingMap = {};
+  try { if(rawJson) existingMap = JSON.parse(rawJson); } catch(e){}
+
+  // Merge existing map into mapper state, but don't overwrite user edits
+  for (const [k,v] of Object.entries(existingMap)) {
+    if (!(k in mapperState)) mapperState[k] = classifyValue(String(v));
+  }
+
+  const colOpts = srcCols.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  const mappedCount = headers.filter(h => {
+    const s = mapperState[h];
+    return s && s.value;
+  }).length;
+  if (badge) badge.textContent = `${mappedCount}/${headers.length} mapped`;
+
+  container.innerHTML = headers.map(h => {
+    const st = mapperState[h] || { type: 'col', value: '' };
+    const isMapped = !!st.value;
+
+    const colSel = `<select class="mapper-col-select" id="msel-${CSS.escape(h)}"
+        onchange="setMapperRow('${h.replace(/'/g,"\\'")}','col',this.value)"
+        style="display:${st.type==='col'?'block':'none'}">
+      <option value="">— source column —</option>${colOpts}
+    </select>`;
+
+    const litInput = `<input type="text" class="mapper-literal-input" id="mlit-${CSS.escape(h)}"
+        placeholder="literal value…"
+        value="${esc(st.type==='literal'?st.value:'')}"
+        oninput="setMapperRow('${h.replace(/'/g,"\\'")}','literal',this.value)"
+        style="display:${st.type==='literal'?'block':'none'}"/>`;
+
+    const specialBtns = SPECIAL_MARKERS.map(m => {
+      const active = st.type==='special' && st.value===m.key;
+      return `<button class="mapper-special-btn${active?' '+m.cls:''}" id="msb-${CSS.escape(h)}-${m.key}"
+          onclick="setMapperRow('${h.replace(/'/g,"\\'")}','special','${m.key}')"
+          style="display:${st.type==='special'||!st.value?'inline-flex':'none'}">${m.label}</button>`;
+    }).join('');
+
+    const typeToggle = `<div class="mapper-type-toggle">
+      <button class="mapper-type-btn${st.type==='col'?' active':''}" onclick="switchMapperType('${h.replace(/'/g,"\\'")}','col')">Col</button>
+      <button class="mapper-type-btn${st.type==='literal'?' active-lit':''}" onclick="switchMapperType('${h.replace(/'/g,"\\'")}','literal')">Literal</button>
+      <button class="mapper-type-btn${st.type==='special'?' active-special':''}" onclick="switchMapperType('${h.replace(/'/g,"\\'")}','special')">Marker</button>
+    </div>`;
+
+    return `<div class="mapper-row ${isMapped?'mapped':'unmapped'}" id="mrow-${CSS.escape(h)}" data-header="${esc(h)}">
+      <div class="mapper-target" title="${esc(h)}">${esc(h)}</div>
+      <div class="mapper-value-area">
+        ${typeToggle}
+        ${colSel}
+        ${litInput}
+        <div class="mapper-special-btns" style="display:${st.type==='special'||!st.value?'flex':'none'}" id="mspecial-${CSS.escape(h)}">${specialBtns}</div>
+      </div>
+      <button class="mapper-clear-btn" onclick="clearMapperRow('${h.replace(/'/g,"\\'")}'))" title="Clear">✕</button>
+    </div>`;
+  }).join('');
+
+  // Restore select values (can't set in innerHTML for selects)
+  headers.forEach(h => {
+    const st = mapperState[h];
+    if (st?.type === 'col' && st.value) {
+      const sel = document.getElementById(`msel-${CSS.escape(h)}`);
+      if (sel) sel.value = st.value;
+    }
+  });
+}
+
+function switchMapperType(header, type) {
+  if (!mapperState[header]) mapperState[header] = { type, value: '' };
+  else { mapperState[header].type = type; mapperState[header].value = ''; }
+  rebuildMapper();
+  syncMapperToJson();
+}
+
+function setMapperRow(header, type, value) {
+  mapperState[header] = { type, value };
+  // Update mapped/unmapped class without full rebuild
+  const row = document.getElementById(`mrow-${CSS.escape(header)}`);
+  if (row) {
+    row.classList.toggle('mapped', !!value);
+    row.classList.toggle('unmapped', !value);
+  }
+  syncMapperToJson();
+  // Update badge
+  const headers = getTargetHeaders();
+  const mapped = headers.filter(h => mapperState[h]?.value).length;
+  const badge = document.getElementById('mapper-status-badge');
+  if (badge) badge.textContent = `${mapped}/${headers.length} mapped`;
+}
+
+function clearMapperRow(header) {
+  mapperState[header] = { type: 'col', value: '' };
+  rebuildMapper();
+  syncMapperToJson();
+}
+
+function setAllUnmapped(markerKey) {
+  const headers = getTargetHeaders();
+  headers.forEach(h => {
+    if (!mapperState[h]?.value) {
+      mapperState[h] = { type: 'special', value: markerKey };
+    }
+  });
+  rebuildMapper();
+  syncMapperToJson();
+}
+
+function filterMapper(q) {
+  const lq = q.toLowerCase();
+  document.querySelectorAll('.mapper-row').forEach(row => {
+    const h = row.dataset.header || '';
+    row.classList.toggle('hidden-row', !!q && !h.toLowerCase().includes(lq));
+  });
+}
+
+function syncMapperToJson() {
+  const headers = getTargetHeaders();
+  const obj = {};
+  headers.forEach(h => {
+    const st = mapperState[h];
+    if (!st || !st.value) return;
+    if (st.type === 'literal') obj[h] = `__LITERAL__:${st.value}`;
+    else obj[h] = st.value;
+  });
+  const ta = document.getElementById('map-json');
+  if (ta) {
+    ta.value = JSON.stringify(obj, null, 2);
+    // Clear any JSON error
+    const err = document.getElementById('json-err');
+    if (err) err.style.display = 'none';
+  }
+}
+
+function syncFromRaw() {
+  const ta = document.getElementById('map-json');
+  if (!ta) return;
+  let obj = {};
+  try {
+    obj = JSON.parse(ta.value || '{}');
+    const err = document.getElementById('json-err');
+    if (err) err.style.display = 'none';
+  } catch(e) {
+    const err = document.getElementById('json-err');
+    if (err) { err.style.display = 'block'; err.textContent = '⚠ ' + e.message; }
+    return;
+  }
+  // Push into mapper state
+  for (const [k, v] of Object.entries(obj)) {
+    mapperState[k] = classifyValue(String(v));
+  }
+  rebuildMapper();
+}
+
+function toggleRawJson() {
+  const card = document.getElementById('raw-json-card');
+  if (!card) return;
+  card.style.display = card.style.display === 'none' ? 'block' : 'none';
+}
+
+// Patch applyPreset to also sync mapper after preset load
+const _origApplyPreset = applyPreset;
+function applyPreset(name) {
+  _origApplyPreset(name);
+  // Clear old mapper state and rebuild from loaded JSON
+  const headers = getTargetHeaders();
+  headers.forEach(h => delete mapperState[h]);
+  syncFromRaw();
+}
+
+// ─── Standard summary ─────────────────────────────────────────────────────────
+function buildStdSummary() {
+  const mc = getMappingConfig();
+  if(!mc) return;
+  const tc = mc.target_headers.length, map = Object.keys(mc.column_mapping).length;
+  const dr = Object.values(mc.column_mapping).filter(v=>String(v).includes('DETRIFF')).length;
+  const tx = S.txRules.std.length;
+  document.getElementById('std-sum-content').innerHTML = `
+    <div class="fr3">
+      <div><div class="hint">FILE</div><div style="font-family:var(--mo);font-size:12px;margin-top:4px">${S.std.filepath?.split('/').pop()||'—'}</div></div>
+      <div><div class="hint">RTO FILE</div><div style="font-family:var(--mo);font-size:12px;margin-top:4px">${S.std.rtoPath?.split('/').pop()||'None'}</div></div>
+      <div><div class="hint">OUTPUT NAME</div><div style="font-family:var(--mo);font-size:12px;margin-top:4px">${document.getElementById('cfg-out').value||'output'}.csv</div></div>
+    </div><hr class="divider">
+    <div class="fr4">
+      <div><div class="hint">TARGET COLS</div><div style="font-size:22px;font-weight:700;margin-top:4px;color:var(--ac)">${tc}</div></div>
+      <div><div class="hint">MAPPED COLS</div><div style="font-size:22px;font-weight:700;margin-top:4px">${map}</div></div>
+      <div><div class="hint">DETRIFF MAPPINGS</div><div style="font-size:22px;font-weight:700;margin-top:4px;color:var(--ye)">${dr}</div></div>
+      <div><div class="hint">TX RULES</div><div style="font-size:22px;font-weight:700;margin-top:4px;color:var(--gr)">${tx}</div></div>
+    </div>`;
+}
+
+// ─── Mapping config ───────────────────────────────────────────────────────────
+function getMappingConfig() {
+  const rawH = document.getElementById('target-hdrs').value.trim();
+  const rawJ = document.getElementById('map-json').value.trim();
+  const hdrs = rawH.includes('\n') ? rawH.split('\n').map(h=>h.trim()).filter(Boolean)
+                                   : rawH.split(',').map(h=>h.trim()).filter(Boolean);
+  let cm={};
+  const err = document.getElementById('json-err');
+  if(rawJ) {
+    try { cm=JSON.parse(rawJ); err.style.display='none'; }
+    catch(e) { err.style.display='block'; err.textContent='⚠ '+e.message; return null; }
+  }
+  return {target_headers:hdrs, column_mapping:cm,
+          rto_cluster_source:document.getElementById('cfg-rto-src').value};
+}
+
+// ─── Run standard process ─────────────────────────────────────────────────────
+async function runProcess(mode) {
+  if(mode==='sk') { await runSKProcess(); return; }
+  const mc = getMappingConfig(); if(!mc){showAlert('Fix JSON errors first');return;}
+  const btn=document.getElementById('btn-run-std'); const st=document.getElementById('std-proc-status');
+  btn.disabled=true; btn.innerHTML='<div class="sp"></div> Processing…';
+  st.innerHTML=`<div class="sb sb-info"><div class="sp"></div> Running transformation…</div>`;
+  document.getElementById('std-result').style.display='none';
+  try {
+    const res=await fetch('api/process',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        filepath:S.std.filepath,rto_filepath:S.std.rtoPath,
+        sheet_name:document.getElementById('cfg-sheet').value,
+        header_row:+document.getElementById('cfg-hr').value,
+        start_col:+document.getElementById('cfg-sc').value,
+        mapping_config:mc,transformations:buildTxPayload('std'),
+        output_name:document.getElementById('cfg-out').value||'output',
+        session_id:S.std.sessionId
+      })});
+    const d=await res.json();
+    if(d.error) throw new Error(d.trace||d.error);
+    S.std.result=d;
+    st.innerHTML=`<div class="sb sb-ok">✓ Done! ${d.rows.toLocaleString()} rows × ${d.cols} columns</div>`;
+    btn.innerHTML='▶ Run Grid Processor'; btn.disabled=false;
+    renderStats('std-stats',d,false);
+    renderTable('std-preview-tbl',d.preview,d.columns);
+    document.getElementById('std-result').style.display='block';
+    markDone('std',5);
+  } catch(e){
+    st.innerHTML=`<div class="sb sb-err">❌ ${e.message.replace(/\n/g,'<br/>')}</div>`;
+    btn.disabled=false; btn.innerHTML='▶ Run Grid Processor';
+  }
+}
+
+// ─── Run SK process ───────────────────────────────────────────────────────────
+async function runSKProcess() {
+  const btn=document.getElementById('btn-run-sk'); const st=document.getElementById('sk-proc-status');
+  btn.disabled=true; btn.innerHTML='<div class="sp"></div> Processing…';
+  st.innerHTML=`<div class="sb sb-info"><div class="sp"></div> Running SK Finance transformation…</div>`;
+  document.getElementById('sk-result').style.display='none';
+
+  // Validate SK JSON
+  let outMap={};
+  try { outMap=JSON.parse(document.getElementById('sk-out-map').value||'{}'); document.getElementById('sk-json-err').style.display='none'; }
+  catch(e) { document.getElementById('sk-json-err').style.display='block'; document.getElementById('sk-json-err').textContent='⚠ '+e.message; btn.disabled=false; btn.innerHTML='▶ Run SK Finance Processor'; return; }
+
+  const rawCols=document.getElementById('sk-out-cols').value.trim();
+  const outCols=rawCols.split('\n').map(c=>c.trim()).filter(Boolean);
+
+  const cfg={
+    sheet_name:document.getElementById('sk-sheet').value,
+    version_id:document.getElementById('sk-ver').value,
+    agent_code_cell:[+document.getElementById('sk-acc-r').value,+document.getElementById('sk-acc-c').value],
+    relationship_code_cell:[+document.getElementById('sk-rel-r').value,+document.getElementById('sk-rel-c').value],
+    payment_basis_row:+document.getElementById('sk-pb-row').value,
+    ncb_row:+document.getElementById('sk-ncb-row').value,
+    cc_row:+document.getElementById('sk-cc-row').value,
+    lob_row:+document.getElementById('sk-lob-row').value,
+    data_start_row:+document.getElementById('sk-ds-row').value,
+    state_col:+document.getElementById('sk-st-col').value,
+    cluster_col:+document.getElementById('sk-cl-col').value,
+    data_start_col:+document.getElementById('sk-dc-col').value,
+    valid_payment_basis:document.getElementById('sk-vpb').value.split(',').map(v=>v.trim()).filter(Boolean),
+    output_columns:outCols,
+    output_mapping:outMap
+  };
+
+  try {
+    const res=await fetch('api/sk_finance/process',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        filepath:S.sk.filepath, rto_filepath:S.sk.rtoPath,
+        config:cfg, transformations:buildTxPayload('sk'),
+        output_name:document.getElementById('sk-out-name').value||'sk_output',
+        session_id:S.sk.sessionId
+      })});
+    const d=await res.json();
+    if(d.error) throw new Error(d.trace||d.error);
+    S.sk.result=d;
+    st.innerHTML=`<div class="sb sb-ok">✓ Done! ${d.rows.toLocaleString()} rows × ${d.cols} columns</div>`;
+    if(d.meta){
+      st.innerHTML+=`<div class="sb sb-info" style="margin-top:8px">Agent: <b>${d.meta.agent_code}</b> · Rel: <b>${d.meta.relationship_code}</b> · Data cols: <b>${d.meta.data_cols_count}</b></div>`;
+    }
+    btn.innerHTML='▶ Run SK Finance Processor'; btn.disabled=false;
+    renderStats('sk-stats',d,true);
+    renderTable('sk-preview-tbl',d.preview,d.columns);
+    document.getElementById('sk-result').style.display='block';
+    markDone('sk',5);
+  } catch(e){
+    st.innerHTML=`<div class="sb sb-err">❌ ${e.message.replace(/\n/g,'<br/>')}</div>`;
+    btn.disabled=false; btn.innerHTML='▶ Run SK Finance Processor';
+  }
+}
+
+// ─── Detriff merger ───────────────────────────────────────────────────────────
+async function runMerge(mode) {
+  const res_key = mode==='std'?'std':'sk';
+  const r = S[res_key].result; if(!r) return;
+  const btn=document.getElementById(`btn-merge-${mode}`); const st=document.getElementById(`${mode}-merge-status`);
+  btn.disabled=true; btn.innerHTML='<div class="sp"></div> Merging…';
+  st.innerHTML=`<div class="sb sb-info"><div class="sp"></div> Applying detriff merger…</div>`;
+  try {
+    const res=await fetch('api/merge_detriff',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({output_path:r.output_path,session_id:S[mode].sessionId})});
+    const d=await res.json();
+    if(d.error) throw new Error(d.error);
+    S[res_key].mergedResult=d;
+    st.innerHTML=`<div class="sb sb-ok">✓ ${d.original_rows.toLocaleString()} → ${d.merged_rows.toLocaleString()} rows (saved ${d.rows_reduced.toLocaleString()})</div>`;
+    btn.innerHTML='✦ Apply Detriff Merger'; btn.disabled=false;
+    document.getElementById(`${mode}-merged-stats`).innerHTML=`
+      <div class="fr" style="max-width:400px">
+        <div><div class="hint">BEFORE</div><div style="font-size:22px;font-weight:700;color:var(--ye)">${d.original_rows.toLocaleString()}</div></div>
+        <div><div class="hint">AFTER</div><div style="font-size:22px;font-weight:700;color:var(--gr)">${d.merged_rows.toLocaleString()}</div></div>
+      </div>`;
+    renderTable(`${mode}-merged-tbl`,d.preview);
+    document.getElementById(`${mode}-merged-section`).style.display='block';
+  } catch(e){
+    st.innerHTML=`<div class="sb sb-err">❌ ${e.message}</div>`;
+    btn.disabled=false; btn.innerHTML='✦ Apply Detriff Merger';
+  }
+}
+
+function dlDirect(m) { const r=S[m].result; if(r) window.location.href=`api/download/${r.output_filename}`; }
+function dlMerged(m) { const r=S[m].mergedResult; if(r) window.location.href=`api/download/${r.merged_filename}`; }
+
+// ─── Render helpers ───────────────────────────────────────────────────────────
+function renderStats(id, d, sk) {
+  document.getElementById(id).innerHTML=`
+    <div class="stat"><div class="val" style="color:var(${sk?'--ac3':'--ac'})">${d.rows.toLocaleString()}</div><div class="lbl">Output Rows</div></div>
+    <div class="stat"><div class="val" style="color:var(--gr)">${d.cols}</div><div class="lbl">Columns</div></div>
+    <div class="stat"><div class="val" style="color:var(--ye)">${(S[sk?'sk':'std'].rtoPath)?'✓':'—'}</div><div class="lbl">RTO Applied</div></div>
+    <div class="stat"><div class="val" style="color:var(--t2)">CSV</div><div class="lbl">Format</div></div>`;
+}
+
+function renderTable(id, rows, cols) {
+  if(!rows||!rows.length){document.getElementById(id).innerHTML='<p style="padding:14px;color:var(--t3)">No preview</p>';return;}
+  const dc=cols||Object.keys(rows[0]); const show=dc.slice(0,10);
+  document.getElementById(id).innerHTML=`<table>
+    <thead><tr>${show.map(c=>`<th>${c}</th>`).join('')}${dc.length>10?`<th>+${dc.length-10}</th>`:''}</tr></thead>
+    <tbody>${rows.map(r=>`<tr>${show.map(c=>`<td title="${r[c]||''}">${r[c]||''}</td>`).join('')}${dc.length>10?'<td>…</td>':''}</tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ─── SK Finance defaults & preview ───────────────────────────────────────────
+async function loadSKDefaults() {
+  const res=await fetch('api/sk_finance/default_config'); const d=await res.json();
+  S.sk.defaultCfg=d;
+  document.getElementById('sk-out-cols').value=(d.output_columns||[]).join('\n');
+  document.getElementById('sk-out-map').value=JSON.stringify(d.output_mapping||{},null,2);
+  // Render source key chips
+  const kc=document.getElementById('sk-source-keys');
+  kc.innerHTML=(d.available_source_keys||[]).map(k=>
+    `<span class="sk-key" onclick="insertSKMarker('${k}')">${k}</span>`).join('');
+}
+
+async function skPreview() {
+  const sh=document.getElementById('sk-sheet').value;
+  try {
+    const res=await fetch('api/sk_finance/preview',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({filepath:S.sk.filepath,sheet_name:sh})});
+    const d=await res.json();
+    if(d.error){showAlert(d.error+'\n\nAvailable: '+(d.sheets||[]).join(', '));return;}
+    const card=document.getElementById('sk-snapshot-card');
+    document.getElementById('sk-snap-info').textContent=`${d.max_row} rows × ${d.max_col} cols`;
+    const snap=d.snapshot||[];
+    // Highlight likely config cells
+    let html='<div class="snapshot-grid">';
+    snap.forEach((row,ri)=>{
+      row.forEach((cell,ci)=>{
+        const highlight = (ri===0&&ci===1)||(ri===2&&ci===1)||(ri===5&&ci===1)||
+                          [8,9,10,11,12,13].includes(ri);
+        html+=`<div class="snap-cell${highlight?' highlight':''}" title="R${ri+1}C${ci+1}">${cell||''}</div>`;
+      });
+    });
+    html+='</div><p class="hint" style="margin-top:8px">Highlighted cells = typical metadata/header positions</p>';
+    document.getElementById('sk-snapshot').innerHTML=html;
+    card.style.display='block';
+    markDone('sk',2);
+  } catch(e){showAlert(e.message);}
+}
+
+function insertSKMarker(m) {
+  const ta=document.getElementById('sk-out-map');
+  const p=ta.selectionStart;
+  ta.value=ta.value.slice(0,p)+m+ta.value.slice(p); ta.focus();
+}
+
+// ─── Transformation builder ───────────────────────────────────────────────────
+function getColOptions(mode) {
+  const cols = mode==='std' ? S.std.srcCols : (S.sk.defaultCfg?.output_columns||[]);
+  // For std, use target headers since tx applies to output
+  const thRaw = document.getElementById('target-hdrs')?.value||'';
+  const th = thRaw.split('\n').map(c=>c.trim()).filter(Boolean);
+  const allCols = mode==='std' ? [...new Set([...th,...S.std.srcCols])] : cols;
+  return allCols;
+}
+
+function addTxRule(mode) {
+  const id = Date.now();
+  S.txRules[mode].push({id, column:'', ops:[]});
+  renderTxRules(mode);
+}
+
+function removeTxRule(mode,id) {
+  S.txRules[mode]=S.txRules[mode].filter(r=>r.id!==id);
+  renderTxRules(mode);
+}
+
+function addOp(mode,ruleId) {
+  const rule=S.txRules[mode].find(r=>r.id===ruleId);
+  if(rule) { rule.ops.push({type:'case',value:'upper'}); renderTxRules(mode); }
+}
+
+function removeOp(mode,ruleId,opIdx) {
+  const rule=S.txRules[mode].find(r=>r.id===ruleId);
+  if(rule){rule.ops.splice(opIdx,1);renderTxRules(mode);}
+}
+
+function updateRule(mode,ruleId,field,value) {
+  const rule=S.txRules[mode].find(r=>r.id===ruleId);
+  if(rule) rule[field]=value;
+}
+
+function updateOp(mode,ruleId,opIdx,field,value) {
+  const rule=S.txRules[mode].find(r=>r.id===ruleId);
+  if(rule&&rule.ops[opIdx]) {
+    if(field==='type') { rule.ops[opIdx]={type:value}; renderTxRules(mode); return; }
+    rule.ops[opIdx][field]=value;
+  }
+}
+
+function addCondRule(mode,ruleId,opIdx) {
+  const rule=S.txRules[mode].find(r=>r.id===ruleId);
+  if(!rule||!rule.ops[opIdx]) return;
+  if(!rule.ops[opIdx].rules) rule.ops[opIdx].rules=[];
+  rule.ops[opIdx].rules.push({if_col:'',if_op:'eq',if_val:'',then_col:'',then_rules:[{when_val:'',when_op:'eq',set_val:''}]});
+  renderTxRules(mode);
+}
+
+function updateCondRule(mode,ruleId,opIdx,crIdx,field,value) {
+  const rule=S.txRules[mode].find(r=>r.id===ruleId);
+  if(rule?.ops[opIdx]?.rules?.[crIdx]) rule.ops[opIdx].rules[crIdx][field]=value;
+}
+
+function addThenRule(mode,ruleId,opIdx,crIdx) {
+  const rule=S.txRules[mode].find(r=>r.id===ruleId);
+  if(rule?.ops[opIdx]?.rules?.[crIdx]) {
+    rule.ops[opIdx].rules[crIdx].then_rules.push({when_val:'',when_op:'eq',set_val:''});
+    renderTxRules(mode);
+  }
+}
+
+function removeThenRule(mode,ruleId,opIdx,crIdx,trIdx) {
+  const rule=S.txRules[mode].find(r=>r.id===ruleId);
+  if(rule?.ops[opIdx]?.rules?.[crIdx]) {
+    rule.ops[opIdx].rules[crIdx].then_rules.splice(trIdx,1);
+    renderTxRules(mode);
+  }
+}
+
+function updateThenRule(mode,ruleId,opIdx,crIdx,trIdx,field,value) {
+  const rule=S.txRules[mode].find(r=>r.id===ruleId);
+  const tr=rule?.ops[opIdx]?.rules?.[crIdx]?.then_rules?.[trIdx];
+  if(tr) tr[field]=value;
+}
+
+function removeCondRule(mode,ruleId,opIdx,crIdx) {
+  const rule=S.txRules[mode].find(r=>r.id===ruleId);
+  if(rule?.ops[opIdx]?.rules) { rule.ops[opIdx].rules.splice(crIdx,1); renderTxRules(mode); }
+}
+
+function renderTxRules(mode) {
+  const container=document.getElementById(`tx-rules-${mode}`);
+  const empty=document.getElementById(`tx-empty-${mode}`);
+  const rules=S.txRules[mode];
+  empty.style.display=rules.length?'none':'block';
+  const cols=getColOptions(mode);
+  container.innerHTML=rules.map(rule=>{
+    const ruleColOpts=cols.map(c=>'<option value="'+esc(c)+'"'+(rule.column===c?' selected':'')+'>'+esc(c)+'</option>').join('');
+    return `
+    <div class="tx-rule fade">
+      <div class="tx-header">
+        <div class="col-sel">
+          <label style="margin-bottom:4px">Target Column</label>
+          <select onchange="updateRule('${mode}',${rule.id},'column',this.value)" style="width:100%">
+            <option value="">— select column —</option>${ruleColOpts}
+          </select>
+        </div>
+        <button class="del-btn" onclick="removeTxRule('${mode}',${rule.id})" title="Remove rule">✕</button>
+      </div>
+      <div class="tx-ops">
+        ${rule.ops.map((op,oi)=>renderOp(mode,rule.id,oi,op,cols)).join('')}
+      </div>
+      <div class="add-op-row">
+        <button class="btn btn-sec btn-xs" onclick="addOp('${mode}',${rule.id})">+ Add Operation</button>
+      </div>
+    </div>`;
+  }).join('');
+
+}
+
+function renderOp(mode, ruleId, oi, op, cols) {
+  const colOpts=cols.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  const typeOpts=TX_TYPES.map(t=>`<option value="${t}"${op.type===t?' selected':''}>${t}</option>`).join('');
+  let params='';
+  if(op.type==='case') {
+    params=`<select onchange="updateOp('${mode}',${ruleId},${oi},'value',this.value)" style="width:130px">
+      <option value="upper"${(op.value||'upper')==='upper'?' selected':''}>UPPER</option>
+      <option value="lower"${op.value==='lower'?' selected':''}>lower</option>
+      <option value="title"${op.value==='title'?' selected':''}>Title Case</option></select>`;
+  } else if(['trim'].includes(op.type)) {
+    params=`<span class="hint" style="align-self:center">No params needed</span>`;
+  } else if(op.type==='strip_chars') {
+    params=`<input type="text" placeholder="chars e.g. ,." value="${esc(op.chars||'')}" onchange="updateOp('${mode}',${ruleId},${oi},'chars',this.value)" style="width:120px"/>`;
+  } else if(op.type==='replace'||op.type==='regex_replace') {
+    params=`<input type="text" placeholder="${op.type==='regex_replace'?'regex pattern':'find text'}" value="${esc(op.find||op.pattern||'')}"
+      onchange="updateOp('${mode}',${ruleId},${oi},'find',this.value)" style="width:150px"/>
+      <span style="color:var(--t3);align-self:center">→</span>
+      <input type="text" placeholder="replace with" value="${esc(op.with||'')}"
+        onchange="updateOp('${mode}',${ruleId},${oi},'with',this.value)" style="width:150px"/>`;
+  } else if(op.type==='value_map') {
+    const mapStr=JSON.stringify(op.map||{},null,2);
+    params=`<div style="flex:1">
+      <textarea placeholder='{"old_val":"new_val","other":"mapped"}' rows="3"
+        onchange="updateOpMap('${mode}',${ruleId},${oi},this.value)"
+        style="width:100%;min-height:70px">${esc(mapStr)}</textarea>
+      <div class="hint">JSON object: old value → new value</div></div>`;
+  } else if(op.type==='prefix'||op.type==='suffix') {
+    params=`<input type="text" placeholder="${op.type} text" value="${esc(op.value||'')}"
+      onchange="updateOp('${mode}',${ruleId},${oi},'value',this.value)" style="width:200px"/>`;
+  } else if(op.type==='default_if_empty') {
+    params=`<input type="text" placeholder="default value" value="${esc(op.value||'ANY')}"
+      onchange="updateOp('${mode}',${ruleId},${oi},'value',this.value)" style="width:200px"/>`;
+  } else if(op.type==='number_format') {
+    params=`<label style="align-self:center;margin:0;text-transform:none">Decimal places:</label>
+      <input type="number" value="${op.decimals||2}" min="0" max="10"
+        onchange="updateOp('${mode}',${ruleId},${oi},'decimals',+this.value)" style="width:70px"/>`;
+  } else if(op.type==='math_op') {
+    params=`<div style="flex:1">
+      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+        <div style="flex:1;min-width:220px">
+          <label style="margin-bottom:3px">Expression <span style="color:var(--t3);font-weight:400;text-transform:none">(use <b style="color:var(--ac)">x</b> for cell value)</span></label>
+          <input type="text" placeholder="e.g.  x * 1.18   or   round(x / 100, 2)" value="${esc(op.expression||'')}"
+            oninput="updateOp('${mode}',${ruleId},${oi},'expression',this.value); previewMath(this, ${ruleId}, ${oi})"
+            style="width:100%;font-family:var(--mo);font-size:12px"/>
+        </div>
+        <div style="width:80px">
+          <label style="margin-bottom:3px">Round to</label>
+          <input type="number" placeholder="decimals" value="${op.decimals!=null?op.decimals:''}" min="0" max="10"
+            onchange="updateOp('${mode}',${ruleId},${oi},'decimals',this.value===''?null:+this.value)" style="width:100%"/>
+        </div>
+      </div>
+      <div id="math-preview-${ruleId}-${oi}" class="hint" style="margin-top:5px;font-family:var(--mo);display:flex;gap:12px;flex-wrap:wrap">
+        ${buildMathExamples(op.expression||'')}
+      </div>
+      <div class="hint" style="margin-top:4px;color:var(--t3)">
+        ✓ If expression fails for a cell (e.g. text value), original value is kept unchanged.
+        &nbsp;·&nbsp; Available: <code style="color:var(--ac)">abs sqrt log log10 ceil floor round min max pow pi e</code>
+      </div>
+    </div>`;
+  } else if(op.type==='conditional') {
+    const crs=(op.rules||[]);
+    params=`<div style="flex:1">
+      ${crs.map((cr,crIdx)=>`
+        <div class="cond-rule-block">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+            <div><label style="margin-bottom:3px">IF column</label>
+              <select onchange="updateCondRule('${mode}',${ruleId},${oi},${crIdx},'if_col',this.value)" style="width:150px">
+                <option value="">— col —</option>${cols.map(c=>'<option value="'+esc(c)+'"'+(cr.if_col===c?' selected':'')+'>'+esc(c)+'</option>').join('')}</select></div>
+            <div><label style="margin-bottom:3px">Operator</label>
+              <select onchange="updateCondRule('${mode}',${ruleId},${oi},${crIdx},'if_op',this.value)" style="width:110px">
+                ${['eq','neq','contains','empty','notempty'].map(o=>`<option value="${o}"${cr.if_op===o?' selected':''}>${o}</option>`).join('')}</select></div>
+            <div><label style="margin-bottom:3px">Value</label>
+              <input type="text" placeholder="match value" value="${esc(cr.if_val||'')}"
+                onchange="updateCondRule('${mode}',${ruleId},${oi},${crIdx},'if_val',this.value)" style="width:130px"/></div>
+            <button class="del-btn" onclick="removeCondRule('${mode}',${ruleId},${oi},${crIdx})">✕</button>
+          </div>
+          <div style="margin-top:10px">
+            <div><label style="margin-bottom:3px">THEN update column</label>
+              <select onchange="updateCondRule('${mode}',${ruleId},${oi},${crIdx},'then_col',this.value)" style="width:200px">
+                <option value="">— col to update —</option>${cols.map(c=>'<option value="'+esc(c)+'"'+(cr.then_col===c?' selected':'')+'>'+esc(c)+'</option>').join('')}</select></div>
+            ${(cr.then_rules||[]).map((tr,trIdx)=>`
+              <div class="cond-then-row">
+                <span style="color:var(--t3);font-size:11px;font-family:var(--mo);white-space:nowrap">when value</span>
+                <select onchange="updateThenRule('${mode}',${ruleId},${oi},${crIdx},${trIdx},'when_op',this.value)" style="width:90px">
+                  ${['eq','contains','empty','any'].map(o=>`<option value="${o}"${tr.when_op===o?' selected':''}>${o}</option>`).join('')}</select>
+                <input type="text" placeholder="value (* = any)" value="${esc(tr.when_val||'')}"
+                  onchange="updateThenRule('${mode}',${ruleId},${oi},${crIdx},${trIdx},'when_val',this.value)" style="width:110px"/>
+                <span style="color:var(--t3);font-size:11px;font-family:var(--mo)">→ set to</span>
+                <input type="text" placeholder="new value" value="${esc(tr.set_val||'')}"
+                  onchange="updateThenRule('${mode}',${ruleId},${oi},${crIdx},${trIdx},'set_val',this.value)" style="width:140px"/>
+                <button class="del-btn" onclick="removeThenRule('${mode}',${ruleId},${oi},${crIdx},${trIdx})">✕</button>
+              </div>`).join('')}
+            <button class="btn btn-sec btn-xs" style="margin-top:6px" onclick="addThenRule('${mode}',${ruleId},${oi},${crIdx})">+ When/Set Row</button>
+          </div>
+        </div>`).join('')}
+      <button class="btn btn-sec btn-xs" onclick="addCondRule('${mode}',${ruleId},${oi})">+ Add Condition</button>
+    </div>`;
+  }
+  return `<div class="tx-op">
+    <div class="tx-op-type">
+      <label style="margin-bottom:3px">Operation</label>
+      <select onchange="updateOp('${mode}',${ruleId},${oi},'type',this.value)" style="width:100%">${typeOpts}</select>
+    </div>
+    <div class="tx-op-params">${params}</div>
+    <button class="del-btn" onclick="removeOp('${mode}',${ruleId},${oi})">✕</button>
+  </div>`;
+}
+
+function updateOpMap(mode,ruleId,oi,val) {
+  try { updateOp(mode,ruleId,oi,'map',JSON.parse(val)); } catch(e){}
+}
+
+// ─── Math Op helpers ──────────────────────────────────────────────────────────
+const MATH_PREVIEW_SAMPLES = [0, 1, 10, 50, 100, 250, 1000];
+function evalMathExpr(expr, x) {
+  const ns = {
+    x, abs: Math.abs, round: Math.round, sqrt: Math.sqrt,
+    log: Math.log, log10: Math.log10, ceil: Math.ceil, floor: Math.floor,
+    min: Math.min, max: Math.max, pow: Math.pow, pi: Math.PI, e: Math.E
+  };
+  // eslint-disable-next-line no-new-func
+  return Function(...Object.keys(ns), `"use strict"; return (${expr});`)(...Object.values(ns));
+}
+
+function buildMathExamples(expr) {
+  if (!expr.trim()) return '<span style="color:var(--t3)">Enter an expression above to see a live preview</span>';
+  const samples = [1, 10, 100, 1000];
+  const parts = samples.map(x => {
+    try {
+      const r = evalMathExpr(expr, x);
+      const disp = typeof r === 'number' ? (Number.isInteger(r) ? r : +r.toFixed(6)) : r;
+      return `<span><span style="color:var(--t3)">x=${x}</span> → <span style="color:var(--gr)">${disp}</span></span>`;
+    } catch(e) {
+      return `<span><span style="color:var(--t3)">x=${x}</span> → <span style="color:var(--re)">err</span></span>`;
+    }
+  });
+  return `<span style="color:var(--t2)">Preview:</span> ${parts.join(' &nbsp; ')}`;
+}
+
+function previewMath(inputEl, ruleId, oi) {
+  const expr = inputEl.value;
+  const previewEl = document.getElementById(`math-preview-${ruleId}-${oi}`);
+  if (previewEl) previewEl.innerHTML = buildMathExamples(expr);
+}
+
+function buildTxPayload(mode) {
+  return S.txRules[mode].filter(r=>r.column).map(r=>({column:r.column,ops:r.ops.filter(o=>o.type)}));
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// ─── Config Export / Import ───────────────────────────────────────────────────
+function gv(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function sv(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+
+function exportConfig() {
+  const cfg = {
+    _version: 2,
+    _exported: new Date().toISOString(),
+    mode: S.mode,
+
+    // ── Standard Grid config ──
+    std: {
+      sheet_name:   gv('cfg-sheet'),
+      header_row:   gv('cfg-hr'),
+      start_col:    gv('cfg-sc'),
+      output_name:  gv('cfg-out'),
+      rto_src:      gv('cfg-rto-src'),
+      target_hdrs:  gv('target-hdrs'),
+      map_json:     gv('map-json'),
+      transformations: S.txRules.std.map(r => ({
+        id: r.id, column: r.column, ops: r.ops
+      }))
+    },
+
+    // ── SK Finance config ──
+    sk: {
+      sheet_name:     gv('sk-sheet'),
+      version_id:     gv('sk-ver'),
+      acc_r:          gv('sk-acc-r'),
+      acc_c:          gv('sk-acc-c'),
+      rel_r:          gv('sk-rel-r'),
+      rel_c:          gv('sk-rel-c'),
+      pb_row:         gv('sk-pb-row'),
+      ncb_row:        gv('sk-ncb-row'),
+      cc_row:         gv('sk-cc-row'),
+      lob_row:        gv('sk-lob-row'),
+      ds_row:         gv('sk-ds-row'),
+      st_col:         gv('sk-st-col'),
+      cl_col:         gv('sk-cl-col'),
+      dc_col:         gv('sk-dc-col'),
+      vpb:            gv('sk-vpb'),
+      out_cols:       gv('sk-out-cols'),
+      out_map:        gv('sk-out-map'),
+      out_name:       gv('sk-out-name'),
+      transformations: S.txRules.sk.map(r => ({
+        id: r.id, column: r.column, ops: r.ops
+      }))
+    }
+  };
+
+  const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const ts = new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  a.download = `grid_config_${ts}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showCfgStatus('✓ Config exported', 'var(--gr)');
+}
+
+async function importConfig(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  // Reset so same file can be re-imported
+  event.target.value = '';
+
+  let cfg;
+  try {
+    cfg = JSON.parse(await file.text());
+  } catch(e) {
+    showCfgStatus('✗ Invalid JSON: ' + e.message, 'var(--re)'); return;
+  }
+  if (!cfg._version) { showCfgStatus('✗ Not a valid config file', 'var(--re)'); return; }
+
+  // ── Restore Standard Grid ──
+  const s = cfg.std || {};
+  sv('cfg-sheet',   s.sheet_name  || '');
+  sv('cfg-hr',      s.header_row  || '2');
+  sv('cfg-sc',      s.start_col   || '2');
+  sv('cfg-out',     s.output_name || 'output');
+  sv('cfg-rto-src', s.rto_src     || 'UW Budget Cluster');
+  sv('target-hdrs', s.target_hdrs || '');
+  sv('map-json',    s.map_json    || '{}');
+
+  // Sync visual mapper from loaded JSON
+  const loadedHeaders = (s.target_hdrs||'').split('\n').map(h=>h.trim()).filter(Boolean);
+  loadedHeaders.forEach(h => delete mapperState[h]);
+  setTimeout(syncFromRaw, 50);
+
+  // Restore std transformations
+  S.txRules.std = (s.transformations || []).map((r,i) => ({
+    id: r.id ?? (Date.now() + i), column: r.column || '', ops: r.ops || []
+  }));
+  renderTxRules('std');
+
+  // ── Restore SK Finance ──
+  const k = cfg.sk || {};
+  sv('sk-sheet',   k.sheet_name || 'SK Finance');
+  sv('sk-ver',     k.version_id || '');
+  sv('sk-acc-r',   k.acc_r      || '1');
+  sv('sk-acc-c',   k.acc_c      || '2');
+  sv('sk-rel-r',   k.rel_r      || '3');
+  sv('sk-rel-c',   k.rel_c      || '2');
+  sv('sk-pb-row',  k.pb_row     || '9');
+  sv('sk-ncb-row', k.ncb_row    || '10');
+  sv('sk-cc-row',  k.cc_row     || '11');
+  sv('sk-lob-row', k.lob_row    || '12');
+  sv('sk-ds-row',  k.ds_row     || '14');
+  sv('sk-st-col',  k.st_col     || '1');
+  sv('sk-cl-col',  k.cl_col     || '2');
+  sv('sk-dc-col',  k.dc_col     || '3');
+  sv('sk-vpb',     k.vpb        || 'on OD,on TP');
+  sv('sk-out-cols',k.out_cols   || '');
+  sv('sk-out-map', k.out_map    || '{}');
+  sv('sk-out-name',k.out_name   || 'sk_finance_output');
+
+  S.txRules.sk = (k.transformations || []).map((r,i) => ({
+    id: r.id ?? (Date.now() + 1000 + i), column: r.column || '', ops: r.ops || []
+  }));
+  renderTxRules('sk');
+
+  // Restore mode last
+  if (cfg.mode) setMode(cfg.mode);
+
+  showCfgStatus('✓ Config restored!', 'var(--gr)');
+}
+
+function showCfgStatus(msg, color) {
+  const el = document.getElementById('cfg-status');
+  el.style.display = 'block';
+  el.style.color = color;
+  el.textContent = msg;
+  setTimeout(() => { el.style.display = 'none'; }, 3500);
+}
+
+function showAlert(msg) { alert(msg); }
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+setMode('std');
+goPanel('std',1);
+</script>
+</body>
+</html>
